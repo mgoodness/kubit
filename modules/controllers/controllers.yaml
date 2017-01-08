@@ -1,0 +1,440 @@
+#cloud-config
+---
+
+coreos:
+  etcd2:
+    discovery_srv: ${INTERNAL_DOMAIN}
+    listen_client_urls: http://127.0.0.1:2379
+    peer_cert_file: /etc/kubernetes/ssl/etcd.pem
+    peer_key_file: /etc/kubernetes/ssl/etcd-key.pem
+    peer_client_cert_auth: true
+    peer_trusted_ca_file: /etc/kubernetes/ssl/ca.pem
+    proxy: on
+
+  flannel:
+    etcd_cafile: /etc/kubernetes/ssl/ca.pem
+    etcd_certfile: /etc/kubernetes/ssl/etcd.pem
+    etcd_endpoints: http://127.0.0.1:2379
+    etcd_keyfile: /etc/kubernetes/ssl/etcd-key.pem
+    interface: $private_ipv4
+
+  locksmith:
+    endpoint: http://127.0.0.1:2379
+    etcd_cafile: /etc/kubernetes/ssl/ca.pem
+    etcd_certfile: /etc/kubernetes/ssl/etcd.pem
+    etcd_keyfile: /etc/kubernetes/ssl/etcd-key.pem
+    group: controllers
+
+  units:
+    - name: docker.service
+      drop-ins:
+        - name: 40-flannel.conf
+          content: |
+            [Unit]
+            Wants=flanneld.service
+
+            [Service]
+            EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
+            ExecStartPre=/usr/bin/systemctl is-active flanneld.service
+
+    - name: etcd2.service
+      command: start
+      drop_ins:
+        - name: 20-assets.conf
+          content: |
+            [Unit]
+            Before=flanneld.service
+
+            [Service]
+            ExecStartPre=/opt/bin/get-assets.sh
+            PermissionsStartOnly=true
+
+            [Install]
+            RequiredBy=flanneld.service
+      enable: true
+
+    - name: flanneld.service
+      drop-ins:
+        - name: 10-etcd.conf
+          content: |
+            [Service]
+            Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
+            ExecStartPre=/usr/bin/etcdctl --ca-file=/etc/kubernetes/ssl/ca.pem \
+              --cert-file=/etc/kubernetes/ssl/etcd.pem --endpoints="http://127.0.0.1:2379" \
+              --key-file=/etc/kubernetes/ssl/etcd-key.pem \
+              set /coreos.com/network/config \
+              '{"Network" : "${PODS_CIDR_BLOCK}", "Backend" : {"Type" : "vxlan"}}'
+            TimeoutStartSec=120
+
+    # - name: kube-node-taint-and-uncordon.service
+    #   command: start
+    #   content: |
+    #     [Unit]
+    #     After=kubelet.service
+    #     Wants=kubelet.service
+    #
+    #     [Service]
+    #     ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+    #     ExecStartPre=/usr/bin/bash -c "while sleep 1; do \
+    #       if /usr/bin/curl -s -m 20 -f http://127.0.0.1:8080/healthz > /dev/null && \
+    #         /usr/bin/curl -s -m 20 -f --insecure https://127.0.0.1:10250/healthz > /dev/null && \
+    #         /usr/bin/curl -s -m 20 -f http://127.0.0.1:10251/healthz > /dev/null && \
+    #         /usr/bin/curl -s -m 20 -f http://127.0.0.1:10252/healthz > /dev/null; then \
+    #           break; fi; done"
+    #     ExecStart=/opt/bin/taint-and-uncordon.sh
+    #     Restart=on-failure
+    #     RestartSec=10
+    #     StartLimitInterval=0
+    #     Type=simple
+    #   runtime: true
+
+    - name: install-kube-addons.service
+      command: start
+      content: |
+        [Unit]
+        Wants=docker.service kubelet.service
+
+        [Service]
+        ExecStartPre=/usr/bin/systemctl is-active docker.service
+        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+        ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
+        ExecStart=/opt/bin/install-kube-addons.sh
+        RestartSec=10
+        Restart=on-failure
+        StartLimitInterval=0
+        Type=simple
+      runtime: true
+
+    - name: kubelet.service
+      command: start
+      content: |
+        [Unit]
+        Wants=flanneld.service
+
+        [Service]
+        Environment=KUBELET_ACI=${HYPERKUBE_REPO}
+        Environment=KUBELET_VERSION=${HYPERKUBE_VERSION}
+        Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+          --mount volume=dns,target=/etc/resolv.conf \
+          --volume rkt,kind=host,source=/opt/bin/host-rkt \
+          --mount volume=rkt,target=/usr/bin/rkt \
+          --volume stage,kind=host,source=/tmp \
+          --mount volume=stage,target=/tmp \
+          --volume var-lib-cni,kind=host,source=/var/lib/cni \
+          --mount volume=var-lib-cni,target=/var/lib/cni \
+          --volume var-lib-rkt,kind=host,source=/var/lib/rkt \
+          --mount volume=var-lib-rkt,target=/var/lib/rkt \
+          --volume var-log,kind=host,source=/var/log \
+          --mount volume=var-log,target=/var/log \
+          --set-env ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
+          --set-env ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd.pem \
+          --set-env ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-key.pem"
+        ExecStartPre=/usr/bin/systemctl is-active flanneld.service
+        ExecStartPre=/usr/bin/mkdir -p /var/lib/cni
+        ExecStartPre=/usr/bin/mkdir -p /var/log/containers
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
+          --allow-privileged=true \
+          --api-servers=http://127.0.0.1:8080 \
+          --cloud-provider=aws \
+          --cluster-dns=${DNS_SERVICE_IP} \
+          --cluster-domain=cluster.local \
+          --cni-conf-dir=/etc/kubernetes/cni/net.d \
+          --container-runtime=docker \
+          --enable-custom-metrics \
+          --network-plugin=cni \
+          --node-labels=kubernetes.io/role=master \
+          --pod-manifest-path=/etc/kubernetes/manifests \
+          --register-schedulable=false \
+          --rkt-path=/usr/bin/rkt \
+          --rkt-stage1-image=coreos.com/rkt/stage1-coreos
+        Restart=always
+        RestartSec=10
+
+        [Install]
+        WantedBy=multi-user.target
+      runtime: true
+
+  update:
+    group: ${UPDATE_GROUP}
+    reboot_strategy: etcd-lock
+
+write_files:
+  - path: /etc/environment
+    content: |
+      COREOS_PRIVATE_IPV4=$private_ipv4
+      COREOS_PUBLIC_IPV4=$public_ipv4
+      ETCDCTL_CA_FILE=/etc/kubernetes/ssl/ca.pem
+      ETCDCTL_CERT_FILE=/etc/kubernetes/ssl/etcd.pem
+      ETCDCTL_ENDPOINT=http://127.0.0.1:2379
+      ETCDCTL_KEY_FILE=/etc/kubernetes/ssl/etcd-key.pem
+
+  - path: /etc/kubernetes/cni/docker_opts_cni.env
+    content: |
+      DOCKER_OPT_BIP=""
+      DOCKER_OPT_IPMASQ=""
+
+  - path: /etc/kubernetes/cni/net.d/10-flannel.conf
+    content: |
+      {
+        "delegate": {
+          "isDefaultGateway": true
+        },
+        "name": "podnet",
+        "type": "flannel"
+      }
+
+  - path: /etc/kubernetes/manifests/kube-apiserver.yaml
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+          - name: kube-apiserver
+            command:
+              - /hyperkube
+              - apiserver
+              - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+              - --advertise-address=$private_ipv4
+              - --allow-privileged=true
+              - --anonymous-auth=false
+              - --apiserver-count=${APISERVER_COUNT}
+              - --bind-address=0.0.0.0
+              - --client-ca-file=/etc/kubernetes/ssl/ca.pem
+              - --cloud-provider=aws
+              - --etcd-cafile=/etc/kubernetes/ssl/ca.pem
+              - --etcd-certfile=/etc/kubernetes/ssl/etcd.pem
+              - --etcd-keyfile=/etc/kubernetes/ssl/etcd-key.pem
+              - --etcd-servers=http://127.0.0.1:2379
+              - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1,rbac.authorization.k8s.io/v1alpha1=true
+              - --secure-port=443
+              - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+              - --service-cluster-ip-range=${SERVICES_CIDR_BLOCK}
+              - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
+              - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+            image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
+            livenessProbe:
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 8080
+              initialDelaySeconds: 15
+              timeoutSeconds: 15
+            ports:
+              - name: https
+                containerPort: 443
+                hostPort: 443
+              - name: local
+                containerPort: 8080
+                hostPort: 8080
+            volumeMounts:
+              - name: ssl-certs-host
+                mountPath: /etc/ssl/certs
+                readOnly: true
+              - name: ssl-certs-kubernetes
+                mountPath: /etc/kubernetes/ssl
+                readOnly: true
+        hostNetwork: true
+        volumes:
+          - name: ssl-certs-host
+            hostPath:
+              path: /usr/share/ca-certificates
+          - name: ssl-certs-kubernetes
+            hostPath:
+              path: /etc/kubernetes/ssl
+
+  - path: /etc/kubernetes/manifests/kube-controller-manager.yaml
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-controller-manager
+        namespace: kube-system
+      spec:
+        containers:
+          - name: kube-controller-manager
+            command:
+              - /hyperkube
+              - controller-manager
+              - --cloud-provider=aws
+              - --leader-elect=true
+              - --master=http://127.0.0.1:8080
+              - --root-ca-file=/etc/kubernetes/ssl/ca.pem
+              - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+            image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
+            livenessProbe:
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10252
+              initialDelaySeconds: 15
+              timeoutSeconds: 15
+            resources:
+              requests:
+                cpu: 200m
+            volumeMounts:
+              - name: ssl-certs-host
+                mountPath: /etc/ssl/certs
+                readOnly: true
+              - name: ssl-certs-kubernetes
+                mountPath: /etc/kubernetes/ssl
+                readOnly: true
+        hostNetwork: true
+        volumes:
+          - name: ssl-certs-host
+            hostPath:
+              path: /usr/share/ca-certificates
+          - name: ssl-certs-kubernetes
+            hostPath:
+              path: /etc/kubernetes/ssl
+
+  - path: /etc/kubernetes/manifests/kube-proxy.yaml
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
+        name: kube-proxy
+        namespace: kube-system
+      spec:
+        containers:
+          - name: kube-proxy
+            command:
+              - /hyperkube
+              - proxy
+              - --master=http://127.0.0.1:8080
+            image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
+            securityContext:
+              privileged: true
+            volumeMounts:
+              - name: dbus
+                mountPath: /var/run/dbus
+                readOnly: false
+              - name: ssl-certs-host
+                mountPath: /etc/ssl/certs
+                readOnly: true
+        hostNetwork: true
+        volumes:
+          - name: dbus
+            hostPath:
+              path: /var/run/dbus
+          - name: ssl-certs-host
+            hostPath:
+              path: /usr/share/ca-certificates
+
+  - path: /etc/kubernetes/manifests/kube-scheduler.yaml
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-scheduler
+        namespace: kube-system
+      spec:
+        containers:
+          - name: kube-scheduler
+            command:
+              - /hyperkube
+              - scheduler
+              - --leader-elect=true
+              - --master=http://127.0.0.1:8080
+            image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
+            livenessProbe:
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10251
+              initialDelaySeconds: 15
+              timeoutSeconds: 15
+            resources:
+              requests:
+                cpu: 100m
+        hostNetwork: true
+
+  - path: /opt/bin/get-assets.sh
+    content: |
+      #!/bin/bash -e
+      SSL_ASSETS=(apiserver.pem apiserver-key.pem ca.pem etcd.pem etcd-key.pem)
+
+      curl -s -L \
+        https://github.com/rlmcpherson/s3gof3r/releases/download/v0.5.0/gof3r_0.5.0_linux_amd64.tar.gz | \
+      tar -xz --strip-components=1 -C /opt/bin --no-anchored gof3r
+
+      mkdir -p /etc/kubernetes/ssl
+      for asset in "$${SSL_ASSETS[@]}"; do
+        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} /etc/kubernetes/ssl/$${asset}
+      done
+
+      mkdir -p /srv/kubernetes/manifests
+      readarray -t MANIFESTS < /tmp/addon-manifests.txt
+      for manifest in "$${MANIFESTS[@]}"; do
+        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/addons/$${manifest} \
+          /srv/kubernetes/manifests/$${manifest}
+      done
+    permissions: 0700
+
+  - path: /opt/bin/host-rkt
+    content: |
+      #!/bin/sh
+      # This is bind mounted into the kubelet rootfs and all rkt shell-outs go
+      # through this rkt wrapper. It essentially enters the host mount namespace
+      # (which it is already in) only for the purpose of breaking out of the chroot
+      # before calling rkt. It makes things like rkt gc work and avoids bind mounting
+      # in certain rkt filesystem dependancies into the kubelet rootfs. This can
+      # eventually be obviated when the write-api stuff gets upstream and rkt gc is
+      # through the api-server. Related issue:
+      # https://github.com/coreos/rkt/issues/2878
+      exec nsenter -m -u -i -n -p -t 1 -- /usr/bin/rkt "$@"
+    permissions: 0755
+
+  - path: /opt/bin/install-kube-addons.sh
+    content: |
+      #!/bin/bash -e
+      for manifest in /srv/kubernetes/manifests/*-svc.yaml; do
+        /usr/bin/curl -H "Content-Type: application/yaml" -XPOST -d"$(cat $${manifest})" \
+          "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
+      done
+
+      for manifest in /srv/kubernetes/manifests/*-deploy.yaml; do
+        /usr/bin/curl -H "Content-Type: application/yaml" -XPOST -d"$(cat $${manifest})" \
+          "http://127.0.0.1:8080/api/v1beta1/namespaces/kube-system/deployments"
+      done
+    permissions: 0700
+
+  # - path: /opt/bin/taint-and-uncordon.sh
+  #   content: |
+  #     #!/bin/bash -e
+  #     hostname=$(hostname)
+  #     rkt run --net=host --trust-keys-from-https \
+  #       --uuid-file-save /var/run/coreos/taint-and-uncordon.uuid \
+  #       --volume kube,kind=host,source=/etc/kubernetes,readOnly=true \
+  #       --mount volume=kube,target=/etc/kubernetes \
+  #       --volume dns,kind=host,source=/etc/resolv.conf,readOnly=true \
+  #       --mount volume=dns,target=/etc/resolv.conf \
+  #       ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION} --exec=/bin/bash -- \
+  #         -vxc \
+  #         'echo "Tainting this node..."; \
+  #          hostname="'$${hostname}'"; \
+  #          kubectl="/kubectl --server=http://127.0.0.1:8080"; \
+  #          taint="$kubectl taint node $hostname"; \
+  #          $taint "node.alpha.kubernetes.io/role:master:NoSchedule"; \
+  #          echo -e "done.\n";\
+  #          echo "Uncordoning this node..."; \
+  #          $kubectl uncordon $hostname;\
+  #          echo -e "done.\n"'
+  #     echo "Cleaning pod resources..."
+  #     rkt rm --uuid-file=/var/run/coreos/taint-and-uncordon.uuid
+  #     echo -e "done.\n"
+  #   permissions: 0700
+
+  - path: /tmp/addon-manifests.txt
+    content: |
+      heapster-svc.yaml
+      heapster-deploy.yaml
+      kube-dashboard-svc.yaml
+      kube-dashboard-deploy.yaml
+      kube-dns-autoscaler-deploy.yaml
+      kube-dns-svc.yaml
+      kube-dns-deploy.yaml

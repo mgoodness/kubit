@@ -1,0 +1,23 @@
+{
+  "signing": {
+    "profiles": {
+      "admin": {
+        "expiry": "4320h",
+        "usages": [
+          "signing",
+          "key encipherment",
+          "client auth"
+        ]
+      },
+      "node": {
+        "expiry": "8760h",
+        "usages": [
+          "signing",
+          "key encipherment",
+          "client auth",
+          "server auth"
+        ]
+      }
+    }
+  }
+}

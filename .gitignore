@@ -1,0 +1,6 @@
+.terraform/
+terraform.tfstate*
+keys/
+kubeconfig
+pki/*.csr
+pki/*.pem

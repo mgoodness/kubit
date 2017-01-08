@@ -1,0 +1,134 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: kube-dns
+    kubernetes.io/cluster-service: "true"
+  name: kube-dns
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-dns
+  strategy:
+    rollingUpdate:
+      maxSurge: 10%
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+      labels:
+        k8s-app: kube-dns
+    spec:
+      containers:
+        - name: dnsmasq
+          args:
+            - --cache-size=1000
+            - --log-facility=-
+            - --no-resolv
+            - --server=127.0.0.1#10053
+          image: gcr.io/google_containers/kube-dnsmasq-amd64:1.4
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /healthz-dnsmasq
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 5
+          ports:
+            - name: dns
+              containerPort: 53
+              protocol: UDP
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 150m
+              memory: 10Mi
+        - name: dnsmasq-metrics
+          args:
+            - --logtostderr
+            - --v=2
+          image: gcr.io/google_containers/dnsmasq-metrics-amd64:1.0
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /metrics
+              port: 10054
+              scheme: HTTP
+            initialDelaySeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 5
+          ports:
+            - name: metrics
+              containerPort: 10054
+              protocol: TCP
+          resources:
+            requests:
+              memory: 10Mi
+        - name: healthz
+          args:
+            - --cmd=nslookup kubernetes.default.svc.cluster.local 127.0.0.1 >/dev/null
+            - --cmd=nslookup kubernetes.default.svc.cluster.local 127.0.0.1:10053 >/dev/null
+            - --port=8080
+            - --quiet
+            - --url=/healthz-dnsmasq
+            - --url=/healthz-kubedns
+          image: gcr.io/google_containers/exechealthz-amd64:1.2
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              memory: 50Mi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+        - name: kubedns
+          args:
+            - --config-map=kube-dns
+            - --domain=cluster.local.
+            - --dns-port=10053
+            - --v=2
+          env:
+            - name: PROMETHEUS_PORT
+              value: "10055"
+          image: gcr.io/google_containers/kubedns-amd64:1.9
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /healthz-kubedns
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 5
+          ports:
+            - name: dns-local
+              containerPort: 10053
+              protocol: UDP
+            - name: dns-tcp-local
+              containerPort: 10053
+              protocol: TCP
+            - name: metrics
+              containerPort: 10055
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 3
+            timeoutSeconds: 5
+          resources:
+            limits:
+              memory: 170Mi
+            requests:
+              cpu: 100m
+              memory: 70Mi
+      dnsPolicy: Default

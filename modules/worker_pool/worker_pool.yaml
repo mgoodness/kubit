@@ -1,0 +1,240 @@
+#cloud-config
+---
+
+coreos:
+  etcd2:
+    discovery_srv: ${INTERNAL_DOMAIN}
+    listen_client_urls: http://127.0.0.1:2379
+    peer_cert_file: /etc/kubernetes/ssl/etcd.pem
+    peer_key_file: /etc/kubernetes/ssl/etcd-key.pem
+    peer_client_cert_auth: true
+    peer_trusted_ca_file: /etc/kubernetes/ssl/ca.pem
+    proxy: on
+
+  flannel:
+    etcd_cafile: /etc/kubernetes/ssl/ca.pem
+    etcd_certfile: /etc/kubernetes/ssl/etcd.pem
+    etcd_endpoints: http://127.0.0.1:2379
+    etcd_keyfile: /etc/kubernetes/ssl/etcd-key.pem
+    interface: $private_ipv4
+
+  locksmith:
+    endpoint: http://127.0.0.1:2379
+    etcd_cafile: /etc/kubernetes/ssl/ca.pem
+    etcd_certfile: /etc/kubernetes/ssl/etcd.pem
+    etcd_keyfile: /etc/kubernetes/ssl/etcd-key.pem
+    group: ${LOCKSMITH_GROUP}
+
+  units:
+    - name: docker.service
+      drop-ins:
+        - name: 40-flannel.conf
+          content: |
+            [Unit]
+            Wants=flanneld.service
+
+            [Service]
+            EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
+            ExecStartPre=/usr/bin/systemctl is-active flanneld.service
+
+    - name: etcd2.service
+      command: start
+      drop_ins:
+        - name: 20-assets.conf
+          content: |
+            [Unit]
+            Before=flanneld.service
+
+            [Service]
+            ExecStartPre=/opt/bin/get-assets.sh
+            PermissionsStartOnly=true
+
+            [Install]
+            RequiredBy=flanneld.service
+      enable: true
+
+    - name: flanneld.service
+      drop-ins:
+        - name: 10-etcd.conf
+          content: |
+            [Service]
+            Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
+            TimeoutStartSec=120
+
+    - name: kubelet.service
+      command: start
+      content: |
+        [Unit]
+        Wants=flanneld.service
+
+        [Service]
+        Environment=KUBELET_ACI=${HYPERKUBE_REPO}
+        Environment=KUBELET_VERSION=${HYPERKUBE_VERSION}
+        Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+          --mount volume=dns,target=/etc/resolv.conf \
+          --volume rkt,kind=host,source=/opt/bin/host-rkt \
+          --mount volume=rkt,target=/usr/bin/rkt \
+          --volume stage,kind=host,source=/tmp \
+          --mount volume=stage,target=/tmp \
+          --volume var-lib-cni,kind=host,source=/var/lib/cni \
+          --mount volume=var-lib-cni,target=/var/lib/cni \
+          --volume var-lib-rkt,kind=host,source=/var/lib/rkt \
+          --mount volume=var-lib-rkt,target=/var/lib/rkt \
+          --volume var-log,kind=host,source=/var/log \
+          --mount volume=var-log,target=/var/log \
+          --set-env ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
+          --set-env ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd.pem \
+          --set-env ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-key.pem"
+        ExecStartPre=/usr/bin/systemctl is-active flanneld.service
+        ExecStartPre=/usr/bin/mkdir -p /var/lib/cni
+        ExecStartPre=/usr/bin/mkdir -p /var/log/containers
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
+          --allow-privileged=true \
+          --cloud-provider=aws \
+          --cluster-dns=${DNS_SERVICE_IP} \
+          --cluster-domain=cluster.local \
+          --cni-conf-dir=/etc/kubernetes/cni/net.d \
+          --container-runtime=docker \
+          --enable-custom-metrics \
+          --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+          --network-plugin=cni \
+          --network-plugin-dir=/etc/kubernetes/cni/net.d \
+          --node-labels=kubernetes.io/role=node \
+          --pod-manifest-path=/etc/kubernetes/manifests \
+          --require-kubeconfig \
+          --rkt-path=/usr/bin/rkt \
+          --rkt-stage1-image=coreos.com/rkt/stage1-coreos
+          --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+          --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
+        Restart=always
+        RestartSec=10
+
+        [Install]
+        WantedBy=multi-user.target
+      runtime: true
+
+  update:
+    group: ${UPDATE_GROUP}
+    reboot_strategy: off
+
+write_files:
+  - path: /etc/environment
+    content: |
+      COREOS_PRIVATE_IPV4=$private_ipv4
+      COREOS_PUBLIC_IPV4=$public_ipv4
+      ETCDCTL_CA_FILE=/etc/kubernetes/ssl/ca.pem
+      ETCDCTL_CERT_FILE=/etc/kubernetes/ssl/etcd.pem
+      ETCDCTL_ENDPOINT=http://127.0.0.1:2379
+      ETCDCTL_KEY_FILE=/etc/kubernetes/ssl/etcd-key.pem
+
+  - path: /etc/kubernetes/cni/docker_opts_cni.env
+    content: |
+      DOCKER_OPT_BIP=""
+      DOCKER_OPT_IPMASQ=""
+
+  - path: /etc/kubernetes/cni/net.d/10-flannel.conf
+    content: |
+      {
+        "delegate": {
+          "isDefaultGateway": true
+        },
+        "name": "podnet",
+        "type": "flannel"
+      }
+
+  - path: /etc/kubernetes/manifests/kube-proxy.yaml
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
+        name: kube-proxy
+        namespace: kube-system
+      spec:
+        containers:
+          - name: kube-proxy
+            command:
+              - /hyperkube
+              - proxy
+              - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+              - --master=${CONTROLLER_ENDPOINT}
+            image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
+            securityContext:
+              privileged: true
+            volumeMounts:
+              - name: dbus
+                mountPath: /var/run/dbus
+                readOnly: false
+              - name: etc-kube-ssl
+                mountPath: /etc/kubernetes/ssl
+                readOnly: true
+              - name: kubeconfig
+                mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+                readOnly: true
+              - name: ssl-certs-host
+                mountPath: /etc/ssl/certs
+        hostNetwork: true
+        volumes:
+          - name: dbus
+            hostPath:
+              path: /var/run/dbus
+          - name: etc-kube-ssl
+            hostPath:
+              path: /etc/kubernetes/ssl
+          - name: kubeconfig
+            hostPath:
+              path: /etc/kubernetes/worker-kubeconfig.yaml
+          - name: ssl-certs-host
+            hostPath:
+              path: /usr/share/ca-certificates
+
+  - path: /etc/kubernetes/worker-kubeconfig.yaml
+    content: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+        - name: local
+          cluster:
+            certificate-authority: /etc/kubernetes/ssl/ca.pem
+            server: ${CONTROLLER_ENDPOINT}
+      contexts:
+        - name: kubelet-context
+          context:
+            cluster: local
+            user: kubelet
+      current-context: kubelet-context
+      users:
+        - name: kubelet
+          user:
+            client-certificate: /etc/kubernetes/ssl/worker.pem
+            client-key: /etc/kubernetes/ssl/worker-key.pem
+
+  - path: /opt/bin/get-assets.sh
+    content: |
+      #!/bin/bash -e
+      SSL_ASSETS=(ca.pem etcd.pem etcd-key.pem worker.pem worker-key.pem)
+
+      curl -s -L \
+        https://github.com/rlmcpherson/s3gof3r/releases/download/v0.5.0/gof3r_0.5.0_linux_amd64.tar.gz | \
+      tar -xz --strip-components=1 -C /opt/bin --no-anchored gof3r
+
+      mkdir -p /etc/kubernetes/ssl
+      for asset in "$${SSL_ASSETS[@]}"; do
+        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} /etc/kubernetes/ssl/$${asset}
+      done
+    permissions: 0700
+
+  - path: /opt/bin/host-rkt
+    content: |
+      #!/bin/sh
+      # This is bind mounted into the kubelet rootfs and all rkt shell-outs go
+      # through this rkt wrapper. It essentially enters the host mount namespace
+      # (which it is already in) only for the purpose of breaking out of the chroot
+      # before calling rkt. It makes things like rkt gc work and avoids bind mounting
+      # in certain rkt filesystem dependancies into the kubelet rootfs. This can
+      # eventually be obviated when the write-api stuff gets upstream and rkt gc is
+      # through the api-server. Related issue:
+      # https://github.com/coreos/rkt/issues/2878
+      exec nsenter -m -u -i -n -p -t 1 -- /usr/bin/rkt "$@"
+    permissions: 0755
