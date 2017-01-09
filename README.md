@@ -8,6 +8,12 @@ This project is essentially a simplified & customized version of [kube-aws](http
  - [Terraform v0.8.2+](https://www.terraform.io/)
  - [cfssl & cfssljson v1.2.0](https://cfssl.org/)
 
+## TL;DR
+ 1. Run `scripts/init.sh`
+ 2. Run `terraform get --update`
+ 3. Run `terraform plan`
+ 4. Run `terraform apply`
+
 ## Initialization
 `scripts/init.sh` will create an SSH key pair and all required TLS assets, generate a `kubeconfig` file, and set the required variables in `terraform.tfvars`. It will also create an S3 bucket (if the bucket does not already exist) and upload assets and manifests to it.
 
