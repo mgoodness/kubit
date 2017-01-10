@@ -1,9 +1,23 @@
+# Copyright 2016 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
     k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
+    kubernetes.io/cluster-service: 'true'
   name: kube-dns
   namespace: kube-system
 spec:
@@ -17,19 +31,18 @@ spec:
   template:
     metadata:
       annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ""
+        scheduler.alpha.kubernetes.io/critical-pod: ''
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
       labels:
         k8s-app: kube-dns
     spec:
       containers:
-        - name: dnsmasq
-          args:
-            - --cache-size=1000
-            - --log-facility=-
-            - --no-resolv
-            - --server=127.0.0.1#10053
-          image: gcr.io/google_containers/kube-dnsmasq-amd64:1.4
+        - args:
+            - '--cache-size=1000'
+            - '--log-facility=-'
+            - '--no-resolv'
+            - '--server=127.0.0.1#10053'
+          image: 'gcr.io/google_containers/kube-dnsmasq-amd64:1.4'
           livenessProbe:
             failureThreshold: 5
             httpGet:
@@ -39,22 +52,22 @@ spec:
             initialDelaySeconds: 60
             successThreshold: 1
             timeoutSeconds: 5
+          name: dnsmasq
           ports:
-            - name: dns
-              containerPort: 53
+            - containerPort: 53
+              name: dns
               protocol: UDP
-            - name: dns-tcp
-              containerPort: 53
+            - containerPort: 53
+              name: dns-tcp
               protocol: TCP
           resources:
             requests:
               cpu: 150m
               memory: 10Mi
-        - name: dnsmasq-metrics
-          args:
-            - --logtostderr
-            - --v=2
-          image: gcr.io/google_containers/dnsmasq-metrics-amd64:1.0
+        - args:
+            - '--logtostderr'
+            - '--v=2'
+          image: 'gcr.io/google_containers/dnsmasq-metrics-amd64:1.0'
           livenessProbe:
             failureThreshold: 5
             httpGet:
@@ -64,22 +77,27 @@ spec:
             initialDelaySeconds: 60
             successThreshold: 1
             timeoutSeconds: 5
+          name: dnsmasq-metrics
           ports:
-            - name: metrics
-              containerPort: 10054
+            - containerPort: 10054
+              name: metrics
               protocol: TCP
           resources:
             requests:
               memory: 10Mi
-        - name: healthz
-          args:
-            - --cmd=nslookup kubernetes.default.svc.cluster.local 127.0.0.1 >/dev/null
-            - --cmd=nslookup kubernetes.default.svc.cluster.local 127.0.0.1:10053 >/dev/null
-            - --port=8080
-            - --quiet
-            - --url=/healthz-dnsmasq
-            - --url=/healthz-kubedns
-          image: gcr.io/google_containers/exechealthz-amd64:1.2
+        - args:
+            - >-
+              --cmd=nslookup kubernetes.default.svc.cluster.local 127.0.0.1
+              >/dev/null
+            - >-
+              --cmd=nslookup kubernetes.default.svc.cluster.local
+              127.0.0.1:10053 >/dev/null
+            - '--port=8080'
+            - '--quiet'
+            - '--url=/healthz-dnsmasq'
+            - '--url=/healthz-kubedns'
+          image: 'gcr.io/google_containers/exechealthz-amd64:1.2'
+          name: healthz
           ports:
             - containerPort: 8080
               protocol: TCP
@@ -89,16 +107,15 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
-        - name: kubedns
-          args:
-            - --config-map=kube-dns
-            - --domain=cluster.local.
-            - --dns-port=10053
-            - --v=2
+        - args:
+            - '--config-map=kube-dns'
+            - '--domain=cluster.local.'
+            - '--dns-port=10053'
+            - '--v=2'
           env:
             - name: PROMETHEUS_PORT
-              value: "10055"
-          image: gcr.io/google_containers/kubedns-amd64:1.9
+              value: '10055'
+          image: 'gcr.io/google_containers/kubedns-amd64:1.9'
           livenessProbe:
             failureThreshold: 5
             httpGet:
@@ -108,15 +125,16 @@ spec:
             initialDelaySeconds: 60
             successThreshold: 1
             timeoutSeconds: 5
+          name: kubedns
           ports:
-            - name: dns-local
-              containerPort: 10053
+            - containerPort: 10053
+              name: dns-local
               protocol: UDP
-            - name: dns-tcp-local
-              containerPort: 10053
+            - containerPort: 10053
+              name: dns-tcp-local
               protocol: TCP
-            - name: metrics
-              containerPort: 10055
+            - containerPort: 10055
+              name: metrics
               protocol: TCP
           readinessProbe:
             httpGet:
