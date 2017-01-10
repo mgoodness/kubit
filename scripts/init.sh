@@ -142,18 +142,16 @@ hyperkube = { version = "${HYPERKUBE_VERSION}" }
 EOF
 }
 
-function template_kubeconfig() {
-  echo "Creating kubeconfig..."
+function create_kubeconfig() {
+  echo "Creating kubeconfig entry..."
   kubectl config set-cluster ${CLUSTER_NAME} --server=https://"kubernetes.${EXTERNAL_DOMAIN}" \
-    --certificate-authority=pki/ca.pem --embed-certs=true --kubeconfig=kubeconfig
+    --certificate-authority=pki/ca.pem --embed-certs=true
 
   kubectl config set-credentials ${CLUSTER_NAME}-admin --client-certificate=pki/admin.pem \
-    --client-key=pki/admin-key.pem --embed-certs=true --kubeconfig=kubeconfig
+    --client-key=pki/admin-key.pem --embed-certs=true
 
   kubectl config set-context ${CLUSTER_NAME} --cluster=${CLUSTER_NAME} \
-    --user=${CLUSTER_NAME}-admin --kubeconfig=kubeconfig
-
-  kubectl config use-context ${CLUSTER_NAME} --kubeconfig=kubeconfig
+    --user=${CLUSTER_NAME}-admin
   echo -e "done.\n"
 }
 
@@ -205,5 +203,5 @@ echo -e "done.\n"
 create_ssh_keys
 create_pki
 create_tfvars
-template_kubeconfig
+create_kubeconfig
 upload_addons

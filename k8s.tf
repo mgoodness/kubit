@@ -2,6 +2,7 @@ module "controllers" {
   source = "./modules/controllers"
   assets_bucket_name = "${var.assets_bucket_name}"
   cluster = "${var.cluster}"
+  depends_id = "${module.etcd_dns.depends_id}"
   domain_names = "${var.domain_names}"
   domain_zone_ids = "${module.common_dns.domain_zone_ids}"
   elb_security_groups = ["${module.security_groups.controllers_elb}"]

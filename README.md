@@ -37,7 +37,7 @@ Name | Type | Description | Handled by `init.sh` | Default
 `vpc_cidr_block` | string | CIDR block for VPC network | no | `10.150.0.0/16`
 
 #### Caveats
- - Avoid changing any `init.sh`-handled variables except through that script. Altering them manually will invalidate the generated TLS assets.
+ - Avoid changing any `init.sh`-handled variables except through that script. Altering them manually will invalidate any generated TLS assets.
  - Avoid changing `cluster.services_cidr_block` unless absolutely necessary. Doing so also requires changes to `scripts/init.sh` and `addons/kube-dns-svc.yaml`.
 
 

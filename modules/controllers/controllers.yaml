@@ -403,7 +403,7 @@ write_files:
 
       for manifest in /srv/kubernetes/manifests/*-deploy.yaml; do
         /usr/bin/curl -H "Content-Type: application/yaml" -XPOST -d"$(cat $${manifest})" \
-          "http://127.0.0.1:8080/api/v1beta1/namespaces/kube-system/deployments"
+          "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
       done
     permissions: 0700
 
