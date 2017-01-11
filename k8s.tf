@@ -31,6 +31,7 @@ module "workers_t2_large_a" {
   internal_domain_name = "${var.domain_names["internal"]}"
   security_groups = [
     "${module.security_groups.etcd_protocol}",
+    "${module.security_groups.nodes}",
     "${module.security_groups.workers}"
   ]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
