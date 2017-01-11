@@ -208,6 +208,7 @@ write_files:
               - --etcd-certfile=/etc/kubernetes/ssl/etcd.pem
               - --etcd-keyfile=/etc/kubernetes/ssl/etcd-key.pem
               - --etcd-servers=http://127.0.0.1:2379
+              - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
               - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1,rbac.authorization.k8s.io/v1alpha1=true
               - --secure-port=443
               - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
