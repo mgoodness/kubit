@@ -15,5 +15,8 @@ resource "aws_route53_record" "etcd_servers" {
 }
 
 resource "null_resource" "etcd_dns" {
-  depends_on = ["aws_route53_record.etcd_clients","aws_route53_record.etcd_servers"]
+  depends_on = [
+    "aws_route53_record.etcd_clients",
+    "aws_route53_record.etcd_servers"
+  ]
 }

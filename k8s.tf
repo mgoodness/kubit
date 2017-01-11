@@ -24,6 +24,7 @@ module "workers_t2_large_a" {
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster = "${var.cluster}"
   controller_endpoint = "${module.controllers.internal_endpoint}"
+  depends_id = "${module.etcd_dns.depends_id}"
   hyperkube = "${var.hyperkube}"
   instance_profile = "${module.iam.workers_instance_profile}"
   instance_type = "t2.large"
