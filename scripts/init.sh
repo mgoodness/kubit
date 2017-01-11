@@ -11,6 +11,19 @@ INTERNAL_DOMAIN="kubit.local"
 
 shopt -s nocasematch
 
+function create_kubeconfig() {
+  echo -e "Creating kubeconfig entry..."
+  kubectl config set-cluster ${CLUSTER_NAME} --server=https://"kubernetes.${EXTERNAL_DOMAIN}" \
+    --certificate-authority=pki/ca.pem --embed-certs=true
+
+  kubectl config set-credentials ${CLUSTER_NAME}-admin --client-certificate=pki/admin.pem \
+    --client-key=pki/admin-key.pem --embed-certs=true
+
+  kubectl config set-context ${CLUSTER_NAME} --cluster=${CLUSTER_NAME} \
+    --user=${CLUSTER_NAME}-admin
+  echo -e "done.\n"
+}
+
 function create_pki() {
   if [[ ! -f "pki/names.json" ]]; then
     while [[ "${pki_correct}" != "y" ]]; do
@@ -33,6 +46,8 @@ function create_pki() {
       echo -e "\n"
     done
     echo "[{${names}}]" > pki/names.json
+  else
+    echo -e "PKI subject already set. Edit pki/names.json manually.\n"
   fi
 
   ca_key_type=$(<pki/ca_key_type.json)
@@ -48,6 +63,8 @@ function create_pki() {
 }
 EOF
     echo -e "done.\n"
+  else
+    echo -e "CA certificate & key already exist. Skipping creation.\n"
   fi
 
   if [[ ! -f pki/etcd-key.pem ]] || [[ ! -f pki/etcd.pem ]]; then
@@ -65,6 +82,8 @@ EOF
 }
 EOF
     echo -e "done.\n"
+  else
+    echo -e "etcd certificate & key already exist. Skipping creation.\n"
   fi
 
   if [[ ! -f pki/apiserver-key.pem ]] || [[ ! -f pki/apiserver.pem ]]; then
@@ -80,13 +99,15 @@ EOF
     "kubernetes.default.svc.cluster.local",
     "kubernetes.${EXTERNAL_DOMAIN}",
     "kubernetes.${INTERNAL_DOMAIN}",
-    "${APISERVER_INTERNAL_ADDRESS}"
+    "${APISERVER_SERVICE_IP}"
   ],
   "key": ${pki_key_type},
   "names": ${names}
 }
 EOF
     echo -e "done.\n"
+  else
+    echo -e "API server certificate & key already exist. Skipping creation.\n"
   fi
 
   if [[ ! -f pki/admin-key.pem ]] || [[ ! -f pki/admin.pem ]]; then
@@ -100,6 +121,8 @@ EOF
 }
 EOF
     echo -e "done.\n"
+  else
+    echo -e "Admin certificate & key already exist. Skipping creation.\n"
   fi
 
   if [[ ! -f pki/worker-key.pem ]] || [[ ! -f pki/worker.pem ]]; then
@@ -116,23 +139,52 @@ EOF
 }
 EOF
     echo -e "done.\n"
+  else
+    echo -e "Worker certificate & key already exist. Skipping creation.\n"
   fi
-
-  echo "Uploading PKI assets..."
-  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/pki
-  echo -e "done.\n"
 }
 
 function create_ssh_keys() {
   echo "Creating SSH keys..."
   mkdir -p keys
-  if [[ ! -f keys/${CLUSTER_NAME} ]] || [[ ! -f keys/${CLUSTER_NAME}.pub ]]; then
-     ssh-keygen -b 2048 -C "${CLUSTER_NAME} cluster key" -f keys/${CLUSTER_NAME}
-  fi
+  ssh-keygen -b 2048 -C "${CLUSTER_NAME} cluster key" -f keys/${CLUSTER_NAME}
   echo -e "done.\n"
 }
 
 function create_tfvars() {
+  while [[ "${ASSETS_BUCKET_NAME}" == "" ]]; do
+    echo -n "Enter assets bucket name: "
+    read ASSETS_BUCKET_NAME
+  done
+  echo
+
+  while [[ "${EXTERNAL_DOMAIN}" == "" ]]; do
+    echo -n "Enter external domain name: "
+    read EXTERNAL_DOMAIN
+  done
+  echo
+
+  echo -n "Enter AWS region [${AWS_REGION}]: "
+  read aws_region
+  [[ "${aws_region}" != "" ]] && AWS_REGION="${aws_region}"
+  [[ "${AWS_REGION}" != "us-east-1" ]] && AWS_WILDCARD="*.${aws_region}.compute.internal"
+  echo
+
+  echo -n "Enter cluster name [${CLUSTER_NAME}]: "
+  read cluster_name
+  [[ "${cluster_name}" != "" ]] && CLUSTER_NAME="${cluster_name}"
+  echo
+
+  echo -n "Enter internal domain name [${INTERNAL_DOMAIN}]: "
+  read internal_domain
+  [[ "${internal_domain}" != "" ]] && INTERNAL_DOMAIN="${internal_domain}"
+  echo
+
+  echo -n "Enter hyperkube version [${HYPERKUBE_VERSION}]: "
+  read hyperkube_version
+  [[ "${hyperkube_version}" != "" ]] && HYPERKUBE_VERSION="${hyperkube_version}"
+  echo
+
   cat << EOF > terraform.tfvars
 assets_bucket_name = "${ASSETS_BUCKET_NAME}"
 aws_region = "${AWS_REGION}"
@@ -142,66 +194,34 @@ hyperkube = { version = "${HYPERKUBE_VERSION}" }
 EOF
 }
 
-function create_kubeconfig() {
-  echo "Creating kubeconfig entry..."
-  kubectl config set-cluster ${CLUSTER_NAME} --server=https://"kubernetes.${EXTERNAL_DOMAIN}" \
-    --certificate-authority=pki/ca.pem --embed-certs=true
-
-  kubectl config set-credentials ${CLUSTER_NAME}-admin --client-certificate=pki/admin.pem \
-    --client-key=pki/admin-key.pem --embed-certs=true
-
-  kubectl config set-context ${CLUSTER_NAME} --cluster=${CLUSTER_NAME} \
-    --user=${CLUSTER_NAME}-admin
+function upload_assets() {
+  echo "Creating assets bucket..."
+  aws s3 mb s3://${ASSETS_BUCKET_NAME}
   echo -e "done.\n"
-}
 
-function upload_addons() {
   echo "Uploading addon manifests..."
   aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/addons
   echo -e "done.\n"
+
+  echo "Uploading PKI assets..."
+  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/pki
+  echo -e "done.\n"
 }
 
+if [[ ! -f terraform.tfvars ]]; then
+  create_tfvars
+else
+  echo -e "Kubit variables are already set. Edit terraform.tfvars manually.\n"
+  ASSETS_BUCKET_NAME=$(sed -n 's/^assets_bucket_name\ =\ "\(.*\)"$/\1/p' terraform.tfvars)
+  EXTERNAL_DOMAIN=$(sed -n 's/^domain_names\ =\ {\ external\ =\ "\(.*\)",.*$/\1/p' terraform.tfvars)
+fi
 
-while [[ "${ASSETS_BUCKET_NAME}" == "" ]]; do
-  echo -n "Enter assets bucket name: "
-  read ASSETS_BUCKET_NAME
-done
-echo
+if [[ ! -f keys/${CLUSTER_NAME} ]] || [[ ! -f keys/${CLUSTER_NAME}.pub ]]; then
+  create_ssh_keys
+else
+  echo -e "SSH key pair already exists. Skipping creation.\n"
+fi
 
-while [[ "${EXTERNAL_DOMAIN}" == "" ]]; do
-  echo -n "Enter external domain name: "
-  read EXTERNAL_DOMAIN
-done
-echo
-
-echo -n "Enter AWS region [${AWS_REGION}]: "
-read aws_region
-[[ "${aws_region}" != "" ]] && AWS_REGION="${aws_region}"
-[[ "${AWS_REGION}" != "us-east-1" ]] && AWS_WILDCARD="*.${aws_region}.compute.internal"
-echo
-
-echo -n "Enter cluster name [${CLUSTER_NAME}]: "
-read cluster_name
-[[ "${cluster_name}" != "" ]] && CLUSTER_NAME="${cluster_name}"
-echo
-
-echo -n "Enter internal domain name [${INTERNAL_DOMAIN}]: "
-read internal_domain
-[[ "${internal_domain}" != "" ]] && INTERNAL_DOMAIN="${internal_domain}"
-echo
-
-echo -n "Enter hyperkube version [${HYPERKUBE_VERSION}]: "
-read hyperkube_version
-[[ "${hyperkube_version}" != "" ]] && HYPERKUBE_VERSION="${hyperkube_version}"
-echo
-
-echo
-echo "Creating assets bucket..."
-aws s3 mb s3://${ASSETS_BUCKET_NAME}
-echo -e "done.\n"
-
-create_ssh_keys
 create_pki
-create_tfvars
 create_kubeconfig
-upload_addons
+upload_assets
