@@ -30,4 +30,9 @@ output "bastion_connection" {
 output "etcd_nodes" {
   value = "${formatlist("%s", list(module.etcd_node_01.fqdn, module.etcd_node_02.fqdn, module.etcd_node_03.fqdn))}"
 }
-output "external_controller_endpoint" { value = "${module.controllers.external_endpoint}" }
+output "external_controller_endpoint" {
+  value = "${module.controllers.external_endpoint}"
+}
+output "external_domain_servers" {
+  value = "${module.common_dns.external_domain_servers}"
+}
