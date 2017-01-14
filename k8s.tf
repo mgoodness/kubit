@@ -18,7 +18,6 @@ module "controllers" {
   source = "./modules/controllers"
   assets_bucket_name = "${var.assets_bucket_name}"
   cluster = "${var.cluster}"
-  depends_id = "${module.etcd_dns.depends_id}"
   domain_names = "${var.domain_names}"
   domain_zone_ids = "${module.common_dns.domain_zone_ids}"
   elb_security_groups = ["${module.security_groups.controllers_elb}"]
@@ -40,7 +39,6 @@ module "workers_t2_large_a" {
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster = "${var.cluster}"
   controller_endpoint = "${module.controllers.internal_endpoint}"
-  depends_id = "${module.etcd_dns.depends_id}"
   hyperkube = "${var.hyperkube}"
   instance_profile = "${module.iam.workers_instance_profile}"
   instance_type = "t2.large"

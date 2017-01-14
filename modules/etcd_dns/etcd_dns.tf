@@ -29,10 +29,3 @@ resource "aws_route53_record" "etcd_servers" {
   records = ["${formatlist("0 0 2380 %s", var.etcd_node_fqdns)}"]
   zone_id = "${var.internal_domain_zone_id}"
 }
-
-resource "null_resource" "etcd_dns" {
-  depends_on = [
-    "aws_route53_record.etcd_clients",
-    "aws_route53_record.etcd_servers"
-  ]
-}

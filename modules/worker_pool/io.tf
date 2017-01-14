@@ -19,7 +19,6 @@ variable "availability_zone" {}
 variable "cluster" { type = "map" }
 variable "controller_endpoint" {}
 variable "coreos_channel" { default = "stable" }
-variable "depends_id" {}
 variable "hyperkube" { type = "map" }
 variable "instance_profile" {}
 variable "instance_type" {}
