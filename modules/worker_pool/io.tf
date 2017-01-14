@@ -24,7 +24,7 @@ variable "instance_profile" {}
 variable "instance_type" {}
 variable "internal_domain_name" {}
 variable "max_pool_size" { default = 64 }
-variable "min_pool_size" { default = 2 }
+variable "min_pool_size" { default = 1 }
 variable "security_groups" { type = "list" }
 variable "spot_price" { default = "" }
 variable "ssh_key_name" {}
