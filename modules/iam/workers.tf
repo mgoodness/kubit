@@ -30,6 +30,11 @@ data "aws_iam_policy_document" "workers" {
       "ecr:GetDownloadUrlForLayer",
       "ecr:GetRepositoryPolicy",
       "ecr:ListImages",
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
       "sts:AssumeRole"
     ]
     resources = ["*"]

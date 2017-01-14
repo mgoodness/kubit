@@ -26,6 +26,11 @@ data "aws_iam_policy_document" "controllers" {
       "ecr:GetRepositoryPolicy",
       "ecr:ListImages",
       "elasticloadbalancing:*",
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
       "sts:AssumeRole"
     ]
     resources = ["*"]

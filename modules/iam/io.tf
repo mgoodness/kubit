@@ -19,5 +19,7 @@ variable "cluster_name" {}
 
 
 output "controllers_instance_profile" { value = "${aws_iam_instance_profile.controllers.id}" }
+output "controllers_role_arn" { value = "${aws_iam_role.controllers.arn}" }
 output "etcd_instance_profile" { value = "${aws_iam_instance_profile.etcd.id}" }
 output "workers_instance_profile" { value = "${aws_iam_instance_profile.workers.id}" }
+output "workers_role_arn" { value = "${aws_iam_role.workers.arn}" }
