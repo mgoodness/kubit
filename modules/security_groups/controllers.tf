@@ -57,6 +57,20 @@ resource "aws_security_group" "controllers" {
     protocol = "tcp"
     to_port = 8080
   }
+  /*Controller-manager*/
+  ingress {
+    from_port = 10252
+    protocol = "tcp"
+    security_groups = ["${aws_security_group.workers.id}"]
+    to_port = 10252
+  }
+  /*Scheduler*/
+  ingress {
+    from_port = 10251
+    protocol = "tcp"
+    security_groups = ["${aws_security_group.workers.id}"]
+    to_port = 10251
+  }
   tags {
     KubernetesCluster = "${var.cluster_name}"
     Name = "${var.cluster_name}-k8s-controllers"

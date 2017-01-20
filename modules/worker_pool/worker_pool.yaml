@@ -149,6 +149,8 @@ write_files:
       metadata:
         annotations:
           rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
+        labels:
+          k8s-app: kube-scheduler
         name: kube-proxy
         namespace: kube-system
       spec:

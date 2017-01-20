@@ -188,6 +188,8 @@ write_files:
       apiVersion: v1
       kind: Pod
       metadata:
+        labels:
+          k8s-app: kube-apiserver
         name: kube-apiserver
         namespace: kube-system
       spec:
@@ -251,6 +253,8 @@ write_files:
       apiVersion: v1
       kind: Pod
       metadata:
+        labels:
+          k8s-app: kube-controller-manager
         name: kube-controller-manager
         namespace: kube-system
       spec:
@@ -272,6 +276,8 @@ write_files:
                 port: 10252
               initialDelaySeconds: 15
               timeoutSeconds: 15
+            ports:
+              - containerPort: 10252
             resources:
               requests:
                 cpu: 200m
@@ -298,6 +304,8 @@ write_files:
       metadata:
         annotations:
           rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
+        labels:
+          k8s-app: kube-scheduler
         name: kube-proxy
         namespace: kube-system
       spec:
@@ -331,6 +339,8 @@ write_files:
       apiVersion: v1
       kind: Pod
       metadata:
+        labels:
+          k8s-app: kube-scheduler
         name: kube-scheduler
         namespace: kube-system
       spec:
@@ -349,6 +359,8 @@ write_files:
                 port: 10251
               initialDelaySeconds: 15
               timeoutSeconds: 15
+            ports:
+              - containerPort: 10251
             resources:
               requests:
                 cpu: 100m

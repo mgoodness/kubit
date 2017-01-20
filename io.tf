@@ -27,7 +27,7 @@ variable "domain_names" { default = { internal = "kubit.local" } }
 variable "hyperkube" {
   default = {
     repository = "quay.io/coreos/hyperkube"
-    version = "v1.5.1_coreos.0"
+    version = "v1.5.2_coreos.1"
   }
 }
 variable "subnets" {

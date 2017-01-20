@@ -24,6 +24,13 @@ resource "aws_security_group" "nodes" {
     self = true
     to_port = 8472
   }
+  /*Prometheus node exporter*/
+  ingress {
+    from_port = 9100
+    protocol = "tcp"
+    self = true
+    to_port = 9100
+  }
   /*Kubelet secure*/
   ingress {
     from_port = 10250
