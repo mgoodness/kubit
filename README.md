@@ -2,7 +2,7 @@
 
 Kubernetes cluster provisioning for AWS using CoreOS and Terraform
 
-This project is essentially a simplified & customized version of [kube-aws](https://github.com/coreos/kube-aws) from [CoreOS](https://coreos.com/) that uses Terraform instead of CloudFormation. **If you have no other preference between the two, I highly recommend using `kube-aws`.**
+This project is essentially a simplified & customized version of [kube-aws](https://github.com/coreos/kube-aws) from [CoreOS](https://coreos.com/) that uses Terraform instead of CloudFormation. **If you have no other preference between the two, I highly recommend using `kube-aws`.** Unlike this project, that one is run by people who know what they're doing.
 
 ## Dependencies
  - [Terraform v0.8.2+](https://www.terraform.io/)
