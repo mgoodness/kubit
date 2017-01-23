@@ -38,6 +38,7 @@ data "template_file" "controllers_config" {
     INTERNAL_DOMAIN = "${var.domain_names["internal"]}"
     PODS_CIDR_BLOCK = "${var.cluster["pods_cidr_block"]}"
     SERVICES_CIDR_BLOCK = "${var.cluster["services_cidr_block"]}"
+    TLS_TOKEN = "${random_id.tls_token.hex}"
     UPDATE_GROUP = "${var.coreos_channel}"
   }
 }
@@ -99,3 +100,5 @@ resource "aws_launch_configuration" "controllers" {
     volume_type = "gp2"
   }
 }
+
+resource "random_id" "tls_token" { byte_length = 16 }

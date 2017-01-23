@@ -34,3 +34,4 @@ variable "ssh_key_name" {}
 
 output "external_endpoint" { value = "https://${aws_route53_record.external.fqdn}" }
 output "internal_endpoint" { value = "https://${aws_route53_record.internal.fqdn}" }
+output "tls_token" { value = "${random_id.tls_token.hex}" }

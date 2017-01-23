@@ -29,5 +29,6 @@ variable "security_groups" { type = "list" }
 variable "spot_price" { default = "" }
 variable "ssh_key_name" {}
 variable "subnet_id" {}
+variable "tls_token" {}
 variable "volume_size" { default = 32 }
 variable "volume_type" { default = "gp2" }

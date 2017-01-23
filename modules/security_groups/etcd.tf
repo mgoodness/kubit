@@ -14,28 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-resource "aws_security_group" "etcd_protocol" {
-  name = "${var.cluster_name}-etcd-protocol"
-  vpc_id = "${var.vpc_id}"
-  /*etcd*/
-  egress {
-    from_port = 2379
-    protocol = "tcp"
-    self = true
-    to_port = 2380
-  }
-  /*etcd*/
-  ingress {
-    from_port = 2379
-    protocol = "tcp"
-    self = true
-    to_port = 2380
-  }
-  tags {
-    Name = "${var.cluster_name}-etcd-protocol"
-  }
-}
-
 resource "aws_security_group" "etcd_cluster" {
   name = "${var.cluster_name}-etcd-cluster"
   vpc_id = "${var.vpc_id}"
@@ -67,5 +45,27 @@ resource "aws_security_group" "etcd_cluster" {
   }
   tags {
     Name = "${var.cluster_name}-etcd-cluster"
+  }
+}
+
+resource "aws_security_group" "etcd_protocol" {
+  name = "${var.cluster_name}-etcd-protocol"
+  vpc_id = "${var.vpc_id}"
+  /*etcd*/
+  egress {
+    from_port = 2379
+    protocol = "tcp"
+    self = true
+    to_port = 2380
+  }
+  /*etcd*/
+  ingress {
+    from_port = 2379
+    protocol = "tcp"
+    self = true
+    to_port = 2380
+  }
+  tags {
+    Name = "${var.cluster_name}-etcd-protocol"
   }
 }

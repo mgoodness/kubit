@@ -41,6 +41,7 @@ data "template_file" "pool_config" {
     HYPERKUBE_VERSION = "${var.hyperkube["version"]}"
     INTERNAL_DOMAIN = "${var.internal_domain_name}"
     LOCKSMITH_GROUP= "${data.template_file.pool_name.rendered}"
+    TLS_TOKEN = "${var.tls_token}"
     UPDATE_GROUP = "${var.coreos_channel}"
   }
 }

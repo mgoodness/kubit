@@ -50,9 +50,10 @@ module "workers_t2_large_0" {
   ]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
   subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  tls_token = "${module.controllers.tls_token}"
 }
 
-module "workers_t2_large_1" {
+/*module "workers_t2_large_1" {
   source = "./modules/worker_pool"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 1)}"
@@ -69,4 +70,5 @@ module "workers_t2_large_1" {
   ]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
   subnet_id = "${element(module.vpc.private_subnet_ids, 1)}"
-}
+  tls_token = "${module.controllers.tls_token}"
+}*/
