@@ -53,7 +53,7 @@ module "workers_t2_large_0" {
   tls_token = "${module.controllers.tls_token}"
 }
 
-/*module "workers_t2_large_1" {
+module "workers_t2_large_1" {
   source = "./modules/worker_pool"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 1)}"
@@ -71,4 +71,24 @@ module "workers_t2_large_0" {
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
   subnet_id = "${element(module.vpc.private_subnet_ids, 1)}"
   tls_token = "${module.controllers.tls_token}"
-}*/
+}
+
+module "workers_t2_large_2" {
+  source = "./modules/worker_pool"
+  assets_bucket_name = "${var.assets_bucket_name}"
+  availability_zone = "${element(var.subnets["availability_zones"], 2)}"
+  cluster = "${var.cluster}"
+  controller_endpoint = "${module.controllers.internal_endpoint}"
+  hyperkube = "${var.hyperkube}"
+  instance_profile = "${module.iam.workers_instance_profile}"
+  instance_type = "t2.large"
+  internal_domain_name = "${var.domain_names["internal"]}"
+  security_groups = [
+    "${module.security_groups.etcd_protocol}",
+    "${module.security_groups.nodes}",
+    "${module.security_groups.workers}"
+  ]
+  ssh_key_name = "${aws_key_pair.key_pair.key_name}"
+  subnet_id = "${element(module.vpc.private_subnet_ids, 2)}"
+  tls_token = "${module.controllers.tls_token}"
+}

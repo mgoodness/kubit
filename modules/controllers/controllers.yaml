@@ -146,7 +146,7 @@ coreos:
           --node-labels=kubernetes.io/role=master \
           --pod-manifest-path=/etc/kubernetes/manifests \
           --register-schedulable=false \
-          --rkt-path=/usr/bin/rkt \
+          --rkt-path=/usr/bin/rkt
         Restart=always
         RestartSec=10
 
@@ -170,7 +170,7 @@ write_files:
 
   - path: /etc/kubernetes/tokens.csv
     content: |
-      ${TLS_TOKEN},kubelet-bootstrap,10001,"system:kubelet-bootstrap"
+      ${TLS_TOKEN},kubelet-bootstrap,10001,system:kubelet-bootstrap
 
   - path: /etc/kubernetes/cni/docker_opts_cni.env
     content: |
@@ -214,14 +214,13 @@ write_files:
               - --etcd-certfile=/etc/kubernetes/ssl/etcd.pem
               - --etcd-keyfile=/etc/kubernetes/ssl/etcd-key.pem
               - --etcd-servers=http://127.0.0.1:2379
-              - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
               - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1,rbac.authorization.k8s.io/v1alpha1=true
               - --secure-port=443
               - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
               - --service-cluster-ip-range=${SERVICES_CIDR_BLOCK}
               - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
               - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-              - --token-auth-file=/etc/kubernetes/auth/tokens.csv
+              - --token-auth-file=/etc/kubernetes/tokens.csv
             image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
             livenessProbe:
               httpGet:
@@ -277,6 +276,7 @@ write_files:
               - --cloud-provider=aws
               - --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem
               - --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem
+              - --insecure-experimental-approve-all-kubelet-csrs-for-group=system:kubelet-bootstrap
               - --leader-elect=true
               - --master=http://127.0.0.1:8080
               - --root-ca-file=/etc/kubernetes/ssl/ca.pem
@@ -318,7 +318,7 @@ write_files:
         annotations:
           rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
         labels:
-          k8s-app: kube-scheduler
+          k8s-app: kube-proxy
         name: kube-proxy
         namespace: kube-system
       spec:
