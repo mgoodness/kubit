@@ -57,6 +57,6 @@ resource "aws_subnet" "private" {
   tags {
     "kubernetes.io/role/internal-elb" = "true"
     KubernetesCluster = "${var.cluster_name}"
-    Name = "${format("%s-public-%s", var.cluster_name, element(var.subnets["availability_zones"], count.index))}"
+    Name = "${format("%s-private-%s", var.cluster_name, element(var.subnets["availability_zones"], count.index))}"
   }
 }
