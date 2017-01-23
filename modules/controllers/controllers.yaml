@@ -189,7 +189,7 @@ write_files:
       kind: Pod
       metadata:
         labels:
-          k8s-app: kube-apiserver
+          : kube-apiserver
         name: kube-apiserver
         namespace: kube-system
       spec:
@@ -254,7 +254,7 @@ write_files:
       kind: Pod
       metadata:
         labels:
-          k8s-app: kube-controller-manager
+          : kube-controller-manager
         name: kube-controller-manager
         namespace: kube-system
       spec:
@@ -305,7 +305,7 @@ write_files:
         annotations:
           rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
         labels:
-          k8s-app: kube-scheduler
+          k8s-app: kube-proxy
         name: kube-proxy
         namespace: kube-system
       spec:
