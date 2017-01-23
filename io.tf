@@ -41,7 +41,7 @@ variable "vpc_cidr_block" { default = "10.150.0.0/16" }
 
 
 output "bastion_connection" {
-  value = "ssh -i ~/.ssh/${var.cluster["name"]} -A core@${module.bastion.fqdn}"
+  value = "ssh -i ./keys/${var.cluster["name"]} -A core@${module.bastion.fqdn}"
 }
 output "etcd_nodes" {
   value = "${formatlist("%s", list(module.etcd_node_01.fqdn, module.etcd_node_02.fqdn, module.etcd_node_03.fqdn))}"
