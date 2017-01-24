@@ -28,6 +28,11 @@ coreos:
   units:
     - name: docker.service
       drop-ins:
+        - name: 20-docker-opts.conf
+          content: |
+            [Service]
+            Environment="DOCKER_OPTS=--log-opt max-size=50m --log-opt max-file=4"
+
         - name: 40-flannel.conf
           content: |
             [Unit]
@@ -68,9 +73,9 @@ coreos:
         Wants=flanneld.service
 
         [Service]
-        Environment=KUBELET_ACI=${HYPERKUBE_REPO}
-        Environment=KUBELET_VERSION=${HYPERKUBE_VERSION}
-        Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+        Environment="KUBELET_IMAGE_TAG=${HYPERKUBE_VERSION}"
+        Environment="KUBELET_IMAGE_URL=${HYPERKUBE_REPO}"
+        Environment="RKT_RUN_ARGS=--volume dns,kind=host,source=/etc/resolv.conf \
           --mount volume=dns,target=/etc/resolv.conf \
           --volume rkt,kind=host,source=/opt/bin/host-rkt \
           --mount volume=rkt,target=/usr/bin/rkt \
@@ -211,18 +216,6 @@ write_files:
           user:
             client-certificate: /etc/kubernetes/ssl/worker.pem
             client-key: /etc/kubernetes/ssl/worker-key.pem
-
-  - path: /etc/logrotate.d/docker-containers
-    content: |
-      /var/lib/docker/containers/*/*.log {
-        compress
-        copytruncate
-        daily
-        delaycompress
-        missingok
-        rotate 7
-        size=1M
-      }
 
   - path: /opt/bin/get-assets.sh
     content: |
