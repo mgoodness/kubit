@@ -50,13 +50,6 @@ resource "aws_security_group" "controllers" {
     protocol = "tcp"
     to_port = 443
   }
-  /*HTTP*/
-  ingress {
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-    from_port = 8080
-    protocol = "tcp"
-    to_port = 8080
-  }
   /*Controller-manager*/
   ingress {
     from_port = 10252
