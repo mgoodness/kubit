@@ -17,10 +17,7 @@ limitations under the License.
 resource "aws_vpc" "main" {
   cidr_block = "${var.cidr_block}"
   enable_dns_hostnames = true
-  tags {
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${var.cluster_name}"
-  }
+  tags { Name = "${var.cluster_name}" }
 }
 
 resource "aws_vpc_dhcp_options" "main" {
