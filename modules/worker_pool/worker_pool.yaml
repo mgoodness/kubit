@@ -108,7 +108,6 @@ coreos:
           --pod-manifest-path=/etc/kubernetes/manifests \
           --require-kubeconfig \
           --rkt-path=/usr/bin/rkt \
-          --rkt-stage1-image=coreos.com/rkt/stage1-coreos
           --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
           --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
         Restart=always

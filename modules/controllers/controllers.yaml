@@ -65,7 +65,8 @@ coreos:
             [Service]
             Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
             ExecStartPre=/usr/bin/etcdctl --ca-file=/etc/kubernetes/ssl/ca.pem \
-              --cert-file=/etc/kubernetes/ssl/etcd.pem --endpoints="http://127.0.0.1:2379" \
+              --cert-file=/etc/kubernetes/ssl/etcd.pem \
+              --endpoints="http://127.0.0.1:2379" \
               --key-file=/etc/kubernetes/ssl/etcd-key.pem \
               set /coreos.com/network/config \
               '{"Network" : "${PODS_CIDR_BLOCK}", "Backend" : {"Type" : "vxlan"}}'
@@ -150,8 +151,7 @@ coreos:
           --node-labels=kubernetes.io/role=master \
           --pod-manifest-path=/etc/kubernetes/manifests \
           --register-schedulable=false \
-          --rkt-path=/usr/bin/rkt \
-          --rkt-stage1-image=coreos.com/rkt/stage1-coreos
+          --rkt-path=/usr/bin/rkt
         Restart=always
         RestartSec=10
 
@@ -194,7 +194,7 @@ write_files:
       kind: Pod
       metadata:
         labels:
-          : kube-apiserver
+          k8s-app: kube-apiserver
         name: kube-apiserver
         namespace: kube-system
       spec:
@@ -215,7 +215,6 @@ write_files:
               - --etcd-certfile=/etc/kubernetes/ssl/etcd.pem
               - --etcd-keyfile=/etc/kubernetes/ssl/etcd-key.pem
               - --etcd-servers=http://127.0.0.1:2379
-              - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
               - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1,rbac.authorization.k8s.io/v1alpha1=true
               - --secure-port=443
               - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
@@ -259,7 +258,7 @@ write_files:
       kind: Pod
       metadata:
         labels:
-          : kube-controller-manager
+          k8s-app: kube-controller-manager
         name: kube-controller-manager
         namespace: kube-system
       spec:
@@ -382,7 +381,8 @@ write_files:
 
       mkdir -p /etc/kubernetes/ssl
       for asset in "$${SSL_ASSETS[@]}"; do
-        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} /etc/kubernetes/ssl/$${asset}
+        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} \
+          /etc/kubernetes/ssl/$${asset}
       done
 
       mkdir -p /srv/kubernetes/manifests
@@ -403,12 +403,14 @@ write_files:
     content: |
       #!/bin/bash -e
       for manifest in /srv/kubernetes/manifests/*-svc.yaml; do
-        /usr/bin/curl -H "Content-Type: application/yaml" -XPOST -d"$(cat $${manifest})" \
+        /usr/bin/curl -H "Content-Type: application/yaml" -XPOST \
+          -d"$(cat $${manifest})" \
           "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
       done
 
       for manifest in /srv/kubernetes/manifests/*-deploy.yaml; do
-        /usr/bin/curl -H "Content-Type: application/yaml" -XPOST -d"$(cat $${manifest})" \
+        /usr/bin/curl -H "Content-Type: application/yaml" -XPOST \
+          -d"$(cat $${manifest})" \
           "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
       done
     permissions: 0700
