@@ -395,7 +395,8 @@ write_files:
 
       mkdir -p /etc/kubernetes/ssl
       for asset in "$${SSL_ASSETS[@]}"; do
-        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} /etc/kubernetes/ssl/$${asset}
+        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} \
+          /etc/kubernetes/ssl/$${asset}
       done
 
       mkdir -p /srv/kubernetes/manifests
