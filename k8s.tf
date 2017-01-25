@@ -50,6 +50,7 @@ module "workers_t2_large_0" {
   ]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
   subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  tls_token = "${module.controllers.tls_token}"
 }
 
 module "workers_t2_large_1" {
@@ -69,6 +70,7 @@ module "workers_t2_large_1" {
   ]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
   subnet_id = "${element(module.vpc.private_subnet_ids, 1)}"
+  tls_token = "${module.controllers.tls_token}"
 }
 
 module "workers_t2_large_2" {
@@ -88,4 +90,5 @@ module "workers_t2_large_2" {
   ]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
   subnet_id = "${element(module.vpc.private_subnet_ids, 2)}"
+  tls_token = "${module.controllers.tls_token}"
 }

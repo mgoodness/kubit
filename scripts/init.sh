@@ -138,24 +138,6 @@ EOF
   else
     echo -e "Admin certificate & key already exist. Skipping creation.\n"
   fi
-
-  if [[ ! -f pki/worker-key.pem ]] || [[ ! -f pki/worker.pem ]]; then
-    echo "Creating worker key & certificate..."
-    cfssl gencert -ca pki/ca.pem -ca-key pki/ca-key.pem -config=pki/config.json \
-      -profile=node - <<EOF | cfssljson -bare pki/worker
-{
-  "CN": "kubit worker",
-  "hosts": [
-    "${AWS_WILDCARD}"
-  ],
-  "key": ${pki_key_type},
-  "names": ${names}
-}
-EOF
-    echo -e "done.\n"
-  else
-    echo -e "Worker certificate & key already exist. Skipping creation.\n"
-  fi
 }
 
 function create_ssh_keys() {

@@ -173,6 +173,10 @@ write_files:
       ETCDCTL_ENDPOINT=http://127.0.0.1:2379
       ETCDCTL_KEY_FILE=/etc/kubernetes/ssl/etcd-key.pem
 
+  - path: /etc/kubernetes/tokens.csv
+    content: |
+      ${TLS_TOKEN},kubelet-bootstrap,10001,system:kubelet-bootstrap
+
   - path: /etc/kubernetes/cni/docker_opts_cni.env
     content: |
       DOCKER_OPT_BIP=""
@@ -221,6 +225,7 @@ write_files:
               - --service-cluster-ip-range=${SERVICES_CIDR_BLOCK}
               - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
               - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+              - --token-auth-file=/etc/kubernetes/tokens.csv
             image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
             livenessProbe:
               httpGet:
@@ -237,6 +242,9 @@ write_files:
                 containerPort: 8080
                 hostPort: 8080
             volumeMounts:
+              - name: kube-tokens
+                mountPath: /etc/kubernetes/tokens.csv
+                readOnly: true
               - name: ssl-certs-host
                 mountPath: /etc/ssl/certs
                 readOnly: true
@@ -245,6 +253,9 @@ write_files:
                 readOnly: true
         hostNetwork: true
         volumes:
+          - name: kube-tokens
+            hostPath:
+              path: /etc/kubernetes/tokens.csv
           - name: ssl-certs-host
             hostPath:
               path: /usr/share/ca-certificates
@@ -268,6 +279,9 @@ write_files:
               - /hyperkube
               - controller-manager
               - --cloud-provider=aws
+              - --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem
+              - --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem
+              - --insecure-experimental-approve-all-kubelet-csrs-for-group=system:kubelet-bootstrap
               - --leader-elect=true
               - --master=http://127.0.0.1:8080
               - --root-ca-file=/etc/kubernetes/ssl/ca.pem
@@ -373,7 +387,7 @@ write_files:
   - path: /opt/bin/get-assets.sh
     content: |
       #!/bin/bash -e
-      SSL_ASSETS=(apiserver.pem apiserver-key.pem ca.pem etcd.pem etcd-key.pem)
+      SSL_ASSETS=(apiserver.pem apiserver-key.pem ca.pem ca-key.pem etcd.pem etcd-key.pem)
 
       curl -s -L \
         https://github.com/rlmcpherson/s3gof3r/releases/download/v0.5.0/gof3r_0.5.0_linux_amd64.tar.gz | \

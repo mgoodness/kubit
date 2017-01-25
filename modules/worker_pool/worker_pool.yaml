@@ -95,21 +95,23 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
           --allow-privileged=true \
+          --cert-dir=/etc/kubernetes/ssl \
           --cloud-provider=aws \
           --cluster-dns=${DNS_SERVICE_IP} \
           --cluster-domain=cluster.local \
           --cni-conf-dir=/etc/kubernetes/cni/net.d \
           --container-runtime=docker \
           --enable-custom-metrics \
-          --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+          --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubeconfig.yaml \
+          --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
           --network-plugin=cni \
           --network-plugin-dir=/etc/kubernetes/cni/net.d \
           --node-labels=kubernetes.io/role=node \
           --pod-manifest-path=/etc/kubernetes/manifests \
           --require-kubeconfig \
           --rkt-path=/usr/bin/rkt \
-          --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
-          --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
+          --tls-cert-file=/etc/kubernetes/ssl/kubelet-client.crt \
+          --tls-private-key-file=/etc/kubernetes/ssl/kubelet-client.key
         Restart=always
         RestartSec=10
 
@@ -163,7 +165,7 @@ write_files:
             command:
               - /hyperkube
               - proxy
-              - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+              - --kubeconfig=/etc/kubernetes/kubeconfig.yaml
               - --master=${CONTROLLER_ENDPOINT}
             image: ${HYPERKUBE_REPO}:${HYPERKUBE_VERSION}
             securityContext:
@@ -176,7 +178,7 @@ write_files:
                 mountPath: /etc/kubernetes/ssl
                 readOnly: true
               - name: kubeconfig
-                mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+                mountPath: /etc/kubernetes/kubeconfig.yaml
                 readOnly: true
               - name: ssl-certs-host
                 mountPath: /etc/ssl/certs
@@ -190,12 +192,12 @@ write_files:
               path: /etc/kubernetes/ssl
           - name: kubeconfig
             hostPath:
-              path: /etc/kubernetes/worker-kubeconfig.yaml
+              path: /etc/kubernetes/kubeconfig.yaml
           - name: ssl-certs-host
             hostPath:
               path: /usr/share/ca-certificates
 
-  - path: /etc/kubernetes/worker-kubeconfig.yaml
+  - path: /etc/kubernetes/bootstrap-kubeconfig.yaml
     content: |
       apiVersion: v1
       kind: Config
@@ -205,21 +207,20 @@ write_files:
             certificate-authority: /etc/kubernetes/ssl/ca.pem
             server: ${CONTROLLER_ENDPOINT}
       contexts:
-        - name: kubelet-context
+        - name: bootstrap-context
           context:
             cluster: local
-            user: kubelet
-      current-context: kubelet-context
+            user: kubelet-bootstrap
+      current-context: bootstrap-context
       users:
-        - name: kubelet
+        - name: kubelet-bootstrap
           user:
-            client-certificate: /etc/kubernetes/ssl/worker.pem
-            client-key: /etc/kubernetes/ssl/worker-key.pem
+            token: ${TLS_TOKEN}
 
   - path: /opt/bin/get-assets.sh
     content: |
       #!/bin/bash -e
-      SSL_ASSETS=(ca.pem etcd.pem etcd-key.pem worker.pem worker-key.pem)
+      SSL_ASSETS=(ca.pem etcd.pem etcd-key.pem)
 
       curl -s -L \
         https://github.com/rlmcpherson/s3gof3r/releases/download/v0.5.0/gof3r_0.5.0_linux_amd64.tar.gz | \
