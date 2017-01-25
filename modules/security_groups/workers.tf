@@ -14,8 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-resource "aws_security_group" "workers" {
-  name = "${var.cluster_name}-k8s-workers"
+resource "aws_security_group" "workers_dynamic" {
+  name = "${var.cluster_name}-k8s-workers-dynamic"
+  vpc_id = "${var.vpc_id}"
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    protocol = -1
+    to_port = 0
+  }
+  lifecycle { ignore_changes = ["ingress"] }
+  tags {
+    KubernetesCluster = "${var.cluster_name}"
+    Name = "${var.cluster_name}-k8s-workers-dynamic"
+  }
+}
+
+resource "aws_security_group" "workers_static" {
+  name = "${var.cluster_name}-k8s-workers-static"
   vpc_id = "${var.vpc_id}"
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -50,9 +66,5 @@ resource "aws_security_group" "workers" {
     self = true
     to_port = 2049
   }
-  lifecycle { ignore_changes = ["ingress"] }
-  tags {
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${var.cluster_name}-k8s-workers"
-  }
+  tags { Name = "${var.cluster_name}-k8s-workers-static" }
 }

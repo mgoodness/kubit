@@ -50,25 +50,18 @@ resource "aws_security_group" "controllers" {
     protocol = "tcp"
     to_port = 443
   }
-  /*HTTP*/
-  /*ingress {
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-    from_port = 8080
-    protocol = "tcp"
-    to_port = 8080
-  }*/
   /*Controller-manager*/
   ingress {
     from_port = 10252
     protocol = "tcp"
-    security_groups = ["${aws_security_group.workers.id}"]
+    security_groups = ["${aws_security_group.workers_static.id}"]
     to_port = 10252
   }
   /*Scheduler*/
   ingress {
     from_port = 10251
     protocol = "tcp"
-    security_groups = ["${aws_security_group.workers.id}"]
+    security_groups = ["${aws_security_group.workers_static.id}"]
     to_port = 10251
   }
   tags {

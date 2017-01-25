@@ -20,7 +20,7 @@ APISERVER_SERVICE_IP="10.252.0.1"
 AWS_REGION="us-east-1"
 AWS_WILDCARD="*.ec2.internal"
 CLUSTER_NAME="kubit"
-HYPERKUBE_VERSION="v1.5.1_coreos.0"
+HYPERKUBE_VERSION="v1.5.2_coreos.1"
 INTERNAL_DOMAIN="kubit.local"
 
 shopt -s nocasematch

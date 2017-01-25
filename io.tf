@@ -50,5 +50,5 @@ output "external_controller_endpoint" {
   value = "${module.controllers.external_endpoint}"
 }
 output "external_domain_servers" {
-  value = "${module.common_dns.external_domain_servers}"
+  value = "\n    ${join("\n    ", module.common_dns.external_domain_servers)}"
 }
