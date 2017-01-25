@@ -54,14 +54,14 @@ resource "aws_security_group" "controllers" {
   ingress {
     from_port = 10252
     protocol = "tcp"
-    security_groups = ["${aws_security_group.workers.id}"]
+    security_groups = ["${aws_security_group.workers_static.id}"]
     to_port = 10252
   }
   /*Scheduler*/
   ingress {
     from_port = 10251
     protocol = "tcp"
-    security_groups = ["${aws_security_group.workers.id}"]
+    security_groups = ["${aws_security_group.workers_static.id}"]
     to_port = 10251
   }
   tags {

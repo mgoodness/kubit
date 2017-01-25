@@ -26,4 +26,9 @@ output "controllers_elb" { value = "${aws_security_group.controllers_elb.id}" }
 output "etcd_cluster" { value = "${aws_security_group.etcd_cluster.id}" }
 output "etcd_protocol" { value = "${aws_security_group.etcd_protocol.id}" }
 output "nodes" { value = "${aws_security_group.nodes.id}" }
-output "workers" { value = "${aws_security_group.workers.id}" }
+output "workers" {
+  value = [
+    "${aws_security_group.workers_dynamic.id}",
+    "${aws_security_group.workers_static.id}"
+  ]
+}
