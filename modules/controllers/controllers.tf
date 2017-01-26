@@ -67,6 +67,7 @@ resource "aws_autoscaling_group" "controllers" {
 
 resource "aws_elb" "controllers" {
   connection_draining = true
+  idle_timeout = "${var.elb_idle_timeout}"
   name = "${var.cluster["name"]}-controllers"
   security_groups = ["${var.elb_security_groups}"]
   subnets = ["${var.public_subnet_ids}"]

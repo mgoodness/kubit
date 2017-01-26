@@ -20,6 +20,7 @@ variable "controller_count" { default = 2 }
 variable "coreos_channel" { default = "stable" }
 variable "domain_names" { type = "map" }
 variable "domain_zone_ids" { type = "map" }
+variable "elb_idle_timeout" { default = 60 }
 variable "elb_security_groups" { type = "list" }
 variable "hyperkube" { type = "map" }
 variable "instance_profile" {}

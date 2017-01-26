@@ -20,6 +20,7 @@ module "controllers" {
   cluster = "${var.cluster}"
   domain_names = "${var.domain_names}"
   domain_zone_ids = "${module.common_dns.domain_zone_ids}"
+  elb_idle_timeout = 300
   elb_security_groups = ["${module.security_groups.controllers_elb}"]
   hyperkube = "${var.hyperkube}"
   instance_profile = "${module.iam.controllers_instance_profile}"
