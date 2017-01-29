@@ -18,10 +18,12 @@ variable "assets_bucket_name" {}
 variable "availability_zone" {}
 variable "cluster_name" {}
 variable "coreos_channel" { default = "stable" }
+variable "ebs_encrypted" {}
 variable "instance_profile" {}
 variable "instance_type" { default = "m4.large" }
 variable "internal_domain_name" {}
 variable "internal_domain_zone_id" {}
+variable "kms_key_id" {}
 variable "private_subnet_id" {}
 variable "region" {}
 variable "security_groups" { type = "list" }

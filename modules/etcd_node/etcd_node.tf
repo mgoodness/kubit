@@ -57,6 +57,8 @@ resource "aws_ebs_volume" "etcd" {
   availability_zone = "${format("%s%s", var.region, var.availability_zone)}"
   size = 4
   type = "gp2"
+  encrypted = "${var.ebs_encrypted}"
+  kms_key_id = "${var.kms_key_id}"
   tags { Name = "${var.cluster_name}-etcd-${var.unique_id}" }
 }
 
