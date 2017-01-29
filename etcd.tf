@@ -16,6 +16,7 @@ limitations under the License.
 
 module "etcd_node_01" {
   source = "./modules/etcd_node"
+  ami_id = "${module.ami.ami_id}"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster_name = "${var.cluster["name"]}"
@@ -34,6 +35,7 @@ module "etcd_node_01" {
 
 module "etcd_node_02" {
   source = "./modules/etcd_node"
+  ami_id = "${module.ami.ami_id}"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster_name = "${var.cluster["name"]}"
@@ -52,6 +54,7 @@ module "etcd_node_02" {
 
 module "etcd_node_03" {
   source = "./modules/etcd_node"
+  ami_id = "${module.ami.ami_id}"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster_name = "${var.cluster["name"]}"

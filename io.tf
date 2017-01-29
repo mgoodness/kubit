@@ -14,8 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+variable "ami_encrypted" { default = false }
 variable "assets_bucket_name" {}
 variable "aws_region" { default = "us-east-1" }
+variable "coreos_channel" { default = "stable" }
+variable "coreos_version" { default = "*" }
 variable "cluster" {
   default = {
     name = "kubit"

@@ -16,8 +16,17 @@ limitations under the License.
 
 provider "aws" { region = "${var.aws_region}" }
 
+module "ami" {
+  source = "./modules/ami"
+  aws_region = "${var.aws_region}"
+  coreos_channel= "${var.coreos_channel}"
+  coreos_version = "${var.coreos_version}"
+  encrypted = "${var.ami_encrypted}"
+}
+
 module "bastion" {
   source = "./modules/bastion"
+  ami_id = "${module.ami.ami_id}"
   cluster_name = "${var.cluster["name"]}"
   public_subnet_id = "${element(module.vpc.public_subnet_ids, 0)}"
   security_groups = ["${module.security_groups.bastion}"]

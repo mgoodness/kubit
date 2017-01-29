@@ -14,21 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-variable "ami_id" {}
-variable "assets_bucket_name" {}
-variable "availability_zone" {}
-variable "cluster_name" {}
+variable "aws_region" { default = "us-east-1" }
 variable "coreos_channel" { default = "stable" }
-variable "instance_profile" {}
-variable "instance_type" { default = "m4.large" }
-variable "internal_domain_name" {}
-variable "internal_domain_zone_id" {}
-variable "private_subnet_id" {}
-variable "region" {}
-variable "security_groups" { type = "list" }
-variable "ssh_key_name" {}
-variable "unique_id" {}
-variable "version" { default = 2 }
+variable "coreos_version" { default = "*" }
+variable "encrypted" { default = false }
+variable "kms_key_id" { default = "" }
+variable "owners" { default = [595879546273] }
 
-
-output "fqdn" { value = "${aws_route53_record.etcd.fqdn}" }
+output "ami_id" {
+  value = "${var.encrypted ? join("", aws_ami_copy.coreos_encrypted.*.id) : data.aws_ami.coreos.id}"
+}

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+variable "ami_id" {}
 variable "assets_bucket_name" {}
 variable "availability_zone" {}
 variable "cluster" { type = "map" }

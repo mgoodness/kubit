@@ -16,6 +16,7 @@ limitations under the License.
 
 module "controllers" {
   source = "./modules/controllers"
+  ami_id = "${module.ami.ami_id}"
   assets_bucket_name = "${var.assets_bucket_name}"
   cluster = "${var.cluster}"
   domain_names = "${var.domain_names}"
@@ -35,6 +36,7 @@ module "controllers" {
 
 module "workers_t2_large_0" {
   source = "./modules/worker_pool"
+  ami_id = "${module.ami.ami_id}"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster = "${var.cluster}"
@@ -55,6 +57,7 @@ module "workers_t2_large_0" {
 
 module "workers_t2_large_1" {
   source = "./modules/worker_pool"
+  ami_id = "${module.ami.ami_id}"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 1)}"
   cluster = "${var.cluster}"
@@ -75,6 +78,7 @@ module "workers_t2_large_1" {
 
 module "workers_t2_large_2" {
   source = "./modules/worker_pool"
+  ami_id = "${module.ami.ami_id}"
   assets_bucket_name = "${var.assets_bucket_name}"
   availability_zone = "${element(var.subnets["availability_zones"], 2)}"
   cluster = "${var.cluster}"
