@@ -24,12 +24,14 @@ variable "cluster" {
   }
 }
 variable "domain_names" { default = { internal = "kubit.local" } }
+variable "ebs_encrypted" { default = true }
 variable "hyperkube" {
   default = {
     repository = "quay.io/coreos/hyperkube"
     version = "v1.5.2_coreos.1"
   }
 }
+variable "kms_key_id" { default = "" }
 variable "subnets" {
   default = {
     availability_zones = ["a","b","c"]
