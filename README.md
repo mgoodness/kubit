@@ -29,8 +29,10 @@ Name | Type | Description | Handled by `init.sh` | Default
 `cluster.services_cidr_block` | string | CIDR block to use for Kubernetes services | no | `10.252.0.0/16`
 `domain_names.external` | string | public Route53 zone to create | yes | **none**
 `domain_names.internal` | string | private hosted Route53 zone to create | yes | `kubit.local`
+`ebs_encrypted` | bool | if `true`, etcd data volume will be encrypted | no | `true`
 `hyperkube.repository` | string | hyperkube container repository | no | `quay.io/coreos/hyperkube`
 `hyperkube.version` | string | hyperkube container image | yes | `v1.5.1_coreos.0`
+`kms_key_id` | string | if provided, key with which to encrypt etcd data volume | no | none (AWS will create & use a default key)
 `subnets.availability_zones` | list | AWS availability zones in which to create subnets | no | `["a","b","c"]`
 `subnets.private_cidr_blocks` | list | CIDRs to use for private subnets | no | `["10.150.10.0/24","10.150.20.0/24","10.150.30.0/24"]`
 `subnets.public_cidr_blocks` | list | CIDRs to use for public subnets | no | `["10.150.1.0/24","10.150.2.0/24","10.150.3.0/24"]`
