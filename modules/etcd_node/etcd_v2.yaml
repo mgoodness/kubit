@@ -4,28 +4,28 @@
 coreos:
   etcd2:
     advertise_client_urls: https://${FQDN}:2379
-    cert_file: /etc/etcd2/ssl/etcd.pem
+    cert_file: /etc/etcd/ssl/etcd.pem
     client_cert_auth: true
-    data_dir: /var/lib/etcd2
+    data_dir: /var/lib/etcd
     discovery_srv: ${DOMAIN}
     initial_advertise_peer_urls: https://${FQDN}:2380
     initial_cluster_state: new
     initial_cluster_token: ${CLUSTER_NAME}
-    key_file: /etc/etcd2/ssl/etcd-key.pem
+    key_file: /etc/etcd/ssl/etcd-key.pem
     listen_client_urls: https://0.0.0.0:2379
     listen_peer_urls: https://0.0.0.0:2380
     name: ${NODE_NAME}
-    peer_cert_file: /etc/etcd2/ssl/etcd.pem
-    peer_key_file: /etc/etcd2/ssl/etcd-key.pem
+    peer_cert_file: /etc/etcd/ssl/etcd.pem
+    peer_key_file: /etc/etcd/ssl/etcd-key.pem
     peer_client_cert_auth: true
-    peer_trusted_ca_file: /etc/etcd2/ssl/ca.pem
-    trusted_ca_file: /etc/etcd2/ssl/ca.pem
+    peer_trusted_ca_file: /etc/etcd/ssl/ca.pem
+    trusted_ca_file: /etc/etcd/ssl/ca.pem
 
   locksmith:
     endpoint: https://${FQDN}:2379
-    etcd_cafile: /etc/etcd2/ssl/ca.pem
-    etcd_certfile: /etc/etcd2/ssl/etcd.pem
-    etcd_keyfile: /etc/etcd2/ssl/etcd-key.pem
+    etcd_cafile: /etc/etcd/ssl/ca.pem
+    etcd_certfile: /etc/etcd/ssl/etcd.pem
+    etcd_keyfile: /etc/etcd/ssl/etcd-key.pem
     group: etcd
 
   units:
@@ -36,16 +36,16 @@ coreos:
           content: |
             [Service]
             ExecStartPre=/opt/bin/get-assets.sh
-            ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
-            ExecStartPre=-/usr/bin/rm -rf /var/lib/etcd2/lost+found
+            ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd
+            ExecStartPre=-/usr/bin/rm -rf /var/lib/etcd/lost+found
             PermissionsStartOnly=true
       enable: true
 
-    - name: format-etcd2-volume.service
+    - name: format-etcd-volume.service
       content: |
         [Unit]
         After=dev-xvdf.device
-        Before=var-lib-etcd2.mount
+        Before=var-lib-etcd.mount
         Requires=dev-xvdf.device
 
         [Service]
@@ -54,10 +54,10 @@ coreos:
         Type=oneshot
 
         [Install]
-        RequiredBy=var-lib-etcd2.mount
+        RequiredBy=var-lib-etcd.mount
       enable: true
 
-    - name: var-lib-etcd2.mount
+    - name: var-lib-etcd.mount
       content: |
         [Unit]
         Before=etcd2.service
@@ -65,7 +65,7 @@ coreos:
         [Mount]
         Type=ext4
         What=/dev/xvdf
-        Where=/var/lib/etcd2
+        Where=/var/lib/etcd
 
         [Install]
         RequiredBy=etcd2.service
@@ -80,10 +80,10 @@ write_files:
     content: |
       COREOS_PRIVATE_IPV4=$private_ipv4
       COREOS_PUBLIC_IPV4=$public_ipv4
-      ETCDCTL_CA_FILE=/etc/etcd2/ssl/ca.pem
-      ETCDCTL_CERT_FILE=/etc/etcd2/ssl/etcd.pem
+      ETCDCTL_CA_FILE=/etc/etcd/ssl/ca.pem
+      ETCDCTL_CERT_FILE=/etc/etcd/ssl/etcd.pem
       ETCDCTL_ENDPOINT=https://${FQDN}:2379
-      ETCDCTL_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
+      ETCDCTL_KEY_FILE=/etc/etcd/ssl/etcd-key.pem
 
   - path: /opt/bin/ext4-format-volume-once.sh
     content: |
@@ -104,8 +104,8 @@ write_files:
         https://github.com/rlmcpherson/s3gof3r/releases/download/v0.5.0/gof3r_0.5.0_linux_amd64.tar.gz | \
       tar -xz --strip-components=1 -C /opt/bin --no-anchored gof3r
 
-      mkdir -p /etc/etcd2/ssl
+      mkdir -p /etc/etcd/ssl
       for asset in "$${SSL_ASSETS[@]}"; do
-        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} /etc/etcd2/ssl/$${asset}
+        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} /etc/etcd/ssl/$${asset}
       done
     permissions: 0700
