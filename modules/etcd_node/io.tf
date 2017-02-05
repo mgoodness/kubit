@@ -29,7 +29,7 @@ variable "region" {}
 variable "security_groups" { type = "list" }
 variable "ssh_key_name" {}
 variable "unique_id" {}
-variable "version" { default = 2 }
+variable "version" { default = 3 }
 
 
 output "fqdn" { value = "${aws_route53_record.etcd.fqdn}" }
