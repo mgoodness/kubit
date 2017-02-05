@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 resource "aws_route53_record" "external" {
-  name = "kubernetes.${var.domain_names["external"]}"
+  name = "kubernetes.${var.cluster["name"]}.${var.domain_names["external"]}"
   type = "A"
   zone_id = "${var.domain_zone_ids["external"]}"
   alias {
@@ -26,7 +26,7 @@ resource "aws_route53_record" "external" {
 }
 
 resource "aws_route53_record" "internal" {
-  name = "kubernetes.${var.domain_names["internal"]}"
+  name = "kubernetes.${var.cluster["name"]}.${var.domain_names["internal"]}"
   type = "A"
   zone_id = "${var.domain_zone_ids["internal"]}"
   alias {

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 resource "aws_security_group" "bastion" {
-  name = "${var.cluster_name}-bastion"
+  name = "${var.environment_name}-${var.cluster_name}-bastion"
   vpc_id = "${var.vpc_id}"
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -30,5 +30,5 @@ resource "aws_security_group" "bastion" {
     protocol = "tcp"
     to_port = 22
   }
-  tags { Name = "${var.cluster_name}-bastion" }
+  tags { Name = "${var.environment_name}-${var.cluster_name}-bastion" }
 }

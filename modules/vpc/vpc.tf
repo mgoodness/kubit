@@ -17,13 +17,13 @@ limitations under the License.
 resource "aws_vpc" "main" {
   cidr_block = "${var.cidr_block}"
   enable_dns_hostnames = true
-  tags { Name = "${var.cluster_name}" }
+  tags { Name = "${var.environment_name}" }
 }
 
 resource "aws_vpc_dhcp_options" "main" {
   domain_name = "${var.region == "us-east-1" ? "ec2.internal" : format("%s.compute.internal", var.region)}"
   domain_name_servers = ["AmazonProvidedDNS"]
-  tags { Name = "${var.cluster_name}" }
+  tags { Name = "${var.environment_name}" }
 }
 
 resource "aws_vpc_dhcp_options_association" "main" {

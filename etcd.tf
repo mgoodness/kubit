@@ -20,6 +20,7 @@ module "etcd_node_01" {
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster_name = "${var.cluster["name"]}"
   ebs_encrypted = "${var.ebs_encrypted}"
+  environment_name = "${var.environment_name}"
   instance_profile = "${module.iam.etcd_instance_profile}"
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
@@ -40,6 +41,7 @@ module "etcd_node_02" {
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster_name = "${var.cluster["name"]}"
   ebs_encrypted = "${var.ebs_encrypted}"
+  environment_name = "${var.environment_name}"
   instance_profile = "${module.iam.etcd_instance_profile}"
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
@@ -60,6 +62,7 @@ module "etcd_node_03" {
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster_name = "${var.cluster["name"]}"
   ebs_encrypted = "${var.ebs_encrypted}"
+  environment_name = "${var.environment_name}"
   instance_profile = "${module.iam.etcd_instance_profile}"
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
@@ -76,6 +79,7 @@ module "etcd_node_03" {
 
 module "etcd_dns" {
   source = "./modules/etcd_dns"
+  cluster_name = "${var.cluster["name"]}"
   etcd_node_fqdns = [
     "${module.etcd_node_01.fqdn}",
     "${module.etcd_node_02.fqdn}",

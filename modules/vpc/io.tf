@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 variable "cidr_block" {}
-variable "cluster_name" {}
+variable "environment_name" {}
 variable "subnets" { type = "map" }
 variable "region" {}
 

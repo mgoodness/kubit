@@ -22,6 +22,7 @@ module "controllers" {
   domain_zone_ids = "${module.common_dns.domain_zone_ids}"
   elb_idle_timeout = 300
   elb_security_groups = ["${module.security_groups.controllers_elb}"]
+  environment_name = "${var.environment_name}"
   hyperkube = "${var.hyperkube}"
   instance_profile = "${module.iam.controllers_instance_profile}"
   instance_security_groups = [
@@ -40,6 +41,7 @@ module "workers_t2_large_0" {
   availability_zone = "${element(var.subnets["availability_zones"], 0)}"
   cluster = "${var.cluster}"
   controller_endpoint = "${module.controllers.internal_endpoint}"
+  environment_name = "${var.environment_name}"
   hyperkube = "${var.hyperkube}"
   instance_profile = "${module.iam.workers_instance_profile}"
   instance_type = "t2.large"
@@ -60,6 +62,7 @@ module "workers_t2_large_1" {
   availability_zone = "${element(var.subnets["availability_zones"], 1)}"
   cluster = "${var.cluster}"
   controller_endpoint = "${module.controllers.internal_endpoint}"
+  environment_name = "${var.environment_name}"
   hyperkube = "${var.hyperkube}"
   instance_profile = "${module.iam.workers_instance_profile}"
   instance_type = "t2.large"
@@ -80,6 +83,7 @@ module "workers_t2_large_2" {
   availability_zone = "${element(var.subnets["availability_zones"], 2)}"
   cluster = "${var.cluster}"
   controller_endpoint = "${module.controllers.internal_endpoint}"
+  environment_name = "${var.environment_name}"
   hyperkube = "${var.hyperkube}"
   instance_profile = "${module.iam.workers_instance_profile}"
   instance_type = "t2.large"

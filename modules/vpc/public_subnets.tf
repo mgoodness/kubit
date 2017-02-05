@@ -21,10 +21,7 @@ data "template_file" "public_az" {
 
 resource "aws_internet_gateway" "gateway" {
   vpc_id = "${aws_vpc.main.id}"
-  tags {
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${var.cluster_name}"
-  }
+  tags { Name = "${var.environment_name}" }
 }
 
 resource "aws_route_table" "public" {
@@ -33,10 +30,7 @@ resource "aws_route_table" "public" {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.gateway.id}"
   }
-  tags {
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${var.cluster_name}-public"
-  }
+  tags { Name = "${var.environment_name}-public" }
 }
 
 resource "aws_route_table_association" "public" {
@@ -53,7 +47,6 @@ resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.main.id}"
   tags {
     "kubernetes.io/role/elb" = "true"
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${format("%s-public-%s", var.cluster_name, element(var.subnets["availability_zones"], count.index))}"
+    Name = "${format("%s-public-%s", var.environment_name, element(var.subnets["availability_zones"], count.index))}"
   }
 }

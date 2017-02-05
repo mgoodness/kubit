@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-variable "cluster_name" {}
 variable "coreos_channel" { default = "stable" }
+variable "cluster_name" {}
+variable "environment_name" {}
 variable "instance_type" { default = "t2.nano" }
 variable "public_subnet_id" {}
 variable "security_groups" { type = "list" }

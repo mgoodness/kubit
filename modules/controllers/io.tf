@@ -22,6 +22,7 @@ variable "domain_names" { type = "map" }
 variable "domain_zone_ids" { type = "map" }
 variable "elb_idle_timeout" { default = 60 }
 variable "elb_security_groups" { type = "list" }
+variable "environment_name" {}
 variable "hyperkube" { type = "map" }
 variable "instance_profile" {}
 variable "instance_security_groups" { type = "list" }

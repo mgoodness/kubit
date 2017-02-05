@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "workers" {
   }
   statement {
     actions = ["s3:GetObject"]
-    resources = ["arn:aws:s3:::${var.assets_bucket_name}/*"]
+    resources = ["arn:aws:s3:::${var.assets_bucket_name}/${var.cluster_name}/*"]
   }
 }
 
@@ -56,17 +56,17 @@ data "aws_iam_policy_document" "workers_assume_role" {
 }
 
 resource "aws_iam_instance_profile" "workers" {
-  name = "${var.cluster_name}-workers"
+  name = "${var.environment_name}-${var.cluster_name}-workers"
   roles = ["${aws_iam_role.workers.name}"]
 }
 
 resource "aws_iam_role" "workers" {
   assume_role_policy = "${data.aws_iam_policy_document.workers_assume_role.json}"
-  name = "${var.cluster_name}-workers"
+  name = "${var.environment_name}-${var.cluster_name}-workers"
 }
 
 resource "aws_iam_role_policy" "workers" {
-  name = "${var.cluster_name}-workers"
+  name = "${var.environment_name}-${var.cluster_name}-workers"
   policy = "${data.aws_iam_policy_document.workers.json}"
   role = "${aws_iam_role.workers.id}"
 }

@@ -42,8 +42,7 @@ resource "aws_route_table" "private" {
     nat_gateway_id = "${element(aws_nat_gateway.nat.*.id, count.index)}"
   }
   tags {
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${format("%s-private-%s", var.cluster_name, element(var.subnets["availability_zones"], count.index))}"
+    Name = "${format("%s-private-%s", var.environment_name, element(var.subnets["availability_zones"], count.index))}"
   }
 }
 
@@ -61,7 +60,6 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.main.id}"
   tags {
     "kubernetes.io/role/internal-elb" = "true"
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${format("%s-private-%s", var.cluster_name, element(var.subnets["availability_zones"], count.index))}"
+    Name = "${format("%s-private-%s", var.environment_name, element(var.subnets["availability_zones"], count.index))}"
   }
 }

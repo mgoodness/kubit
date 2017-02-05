@@ -19,6 +19,7 @@ provider "aws" { region = "${var.aws_region}" }
 module "bastion" {
   source = "./modules/bastion"
   cluster_name = "${var.cluster["name"]}"
+  environment_name = "${var.environment_name}"
   public_subnet_id = "${element(module.vpc.public_subnet_ids, 0)}"
   security_groups = ["${module.security_groups.bastion}"]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
@@ -34,11 +35,13 @@ module "iam" {
   source = "./modules/iam"
   assets_bucket_name = "${var.assets_bucket_name}"
   cluster_name = "${var.cluster["name"]}"
+  environment_name = "${var.environment_name}"
 }
 
 module "security_groups" {
   source = "./modules/security_groups"
   cluster_name = "${var.cluster["name"]}"
+  environment_name = "${var.environment_name}"
   vpc_cidr_block = "${var.vpc_cidr_block}"
   vpc_id = "${module.vpc.vpc_id}"
 }
@@ -46,7 +49,7 @@ module "security_groups" {
 module "vpc" {
   source = "./modules/vpc"
   cidr_block = "${var.vpc_cidr_block}"
-  cluster_name = "${var.cluster["name"]}"
+  environment_name = "${var.environment_name}"
   region = "${var.aws_region}"
   subnets = ["${var.subnets}"]
 }

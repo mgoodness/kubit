@@ -16,6 +16,7 @@ limitations under the License.
 
 variable "access_cidr_blocks" { default = [], type = "list" }
 variable "cluster_name" {}
+variable "environment_name" {}
 variable "vpc_cidr_block" {}
 variable "vpc_id" {}
 

@@ -32,17 +32,17 @@ data "template_file" "etcd" {
   vars {
     ASSETS_BUCKET_NAME = "${var.assets_bucket_name}"
     CLUSTER_NAME = "${var.cluster_name}"
-    DOMAIN = "${var.internal_domain_name}"
-    FQDN = "${var.cluster_name}-etcd-${var.unique_id}.${var.internal_domain_name}"
-    NODE_NAME = "${var.cluster_name}-etcd-${var.unique_id}"
+    FQDN = "etcd-${var.unique_id}.${var.cluster_name}.${var.internal_domain_name}"
+    INTERNAL_DOMAIN = "${var.internal_domain_name}"
+    NODE_NAME = "${var.environment_name}-${var.cluster_name}-etcd-${var.unique_id}"
     UPDATE_GROUP = "${var.coreos_channel}"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "etcd_recover" {
   alarm_actions = ["arn:aws:automate:${var.region}:ec2:recover"]
-  alarm_description = "Recover ${var.cluster_name}-etcd-${var.unique_id}"
-  alarm_name = "${var.cluster_name}-etcd-${var.unique_id}"
+  alarm_description = "Recover ${var.environment_name}-${var.cluster_name}-etcd-${var.unique_id}"
+  alarm_name = "${var.environment_name}-${var.cluster_name}-etcd-${var.unique_id}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods = 2
   metric_name = "StatusCheckFailed_System"
@@ -59,7 +59,7 @@ resource "aws_ebs_volume" "etcd" {
   type = "gp2"
   encrypted = "${var.ebs_encrypted}"
   kms_key_id = "${var.kms_key_id}"
-  tags { Name = "${var.cluster_name}-etcd-${var.unique_id}" }
+  tags { Name = "${var.environment_name}-${var.cluster_name}-etcd-${var.unique_id}" }
 }
 
 resource "aws_instance" "etcd" {
@@ -72,11 +72,11 @@ resource "aws_instance" "etcd" {
   user_data = "${data.template_file.etcd.rendered}"
   vpc_security_group_ids = ["${var.security_groups}"]
   lifecycle { ignore_changes = ["ami"] }
-  tags { Name = "${var.cluster_name}-etcd-${var.unique_id}" }
+  tags { Name = "${var.environment_name}-${var.cluster_name}-etcd-${var.unique_id}" }
 }
 
 resource "aws_route53_record" "etcd" {
-  name = "${var.cluster_name}-etcd-${var.unique_id}.${var.internal_domain_name}"
+  name = "etcd-${var.unique_id}.${var.cluster_name}.${var.internal_domain_name}"
   ttl = 30
   type = "A"
   records = ["${aws_instance.etcd.private_ip}"]

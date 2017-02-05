@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 resource "aws_security_group" "workers_dynamic" {
-  name = "${var.cluster_name}-k8s-workers-dynamic"
+  name = "${var.environment_name}-${var.cluster_name}-k8s-workers-dynamic"
   vpc_id = "${var.vpc_id}"
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -25,13 +25,13 @@ resource "aws_security_group" "workers_dynamic" {
   }
   lifecycle { ignore_changes = ["ingress"] }
   tags {
-    KubernetesCluster = "${var.cluster_name}"
-    Name = "${var.cluster_name}-k8s-workers-dynamic"
+    KubernetesCluster = "${var.environment_name}-${var.cluster_name}"
+    Name = "${var.environment_name}-${var.cluster_name}-k8s-workers-dynamic"
   }
 }
 
 resource "aws_security_group" "workers_static" {
-  name = "${var.cluster_name}-k8s-workers-static"
+  name = "${var.environment_name}-${var.cluster_name}-k8s-workers-static"
   vpc_id = "${var.vpc_id}"
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -66,5 +66,5 @@ resource "aws_security_group" "workers_static" {
     self = true
     to_port = 2049
   }
-  tags { Name = "${var.cluster_name}-k8s-workers-static" }
+  tags { Name = "${var.environment_name}-${var.cluster_name}-k8s-workers-static" }
 }

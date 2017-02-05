@@ -25,6 +25,7 @@ variable "cluster" {
 }
 variable "domain_names" { default = { internal = "kubit.local" } }
 variable "ebs_encrypted" { default = true }
+variable "environment_name" { default = "test" }
 variable "hyperkube" {
   default = {
     repository = "quay.io/coreos/hyperkube"
