@@ -32,17 +32,17 @@ data "aws_iam_policy_document" "etcd_assume_role" {
 }
 
 resource "aws_iam_instance_profile" "etcd" {
-  name = "${var.environment_name}-${var.cluster_name}-etcd"
+  name = "${var.cluster_name}-etcd"
   roles = ["${aws_iam_role.etcd.name}"]
 }
 
 resource "aws_iam_role" "etcd" {
   assume_role_policy = "${data.aws_iam_policy_document.etcd_assume_role.json}"
-  name = "${var.environment_name}-${var.cluster_name}-etcd"
+  name = "${var.cluster_name}-etcd"
 }
 
 resource "aws_iam_role_policy" "etcd" {
-  name = "${var.environment_name}-${var.cluster_name}-etcd"
+  name = "${var.cluster_name}-etcd"
   policy = "${data.aws_iam_policy_document.etcd.json}"
   role = "${aws_iam_role.etcd.id}"
 }

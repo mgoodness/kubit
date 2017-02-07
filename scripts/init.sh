@@ -213,11 +213,11 @@ function upload_assets() {
   echo -e "done.\n"
 
   echo "Uploading addon manifests..."
-  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/${CLUSTER_NAME}/addons ${OPTIONS}
+  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/${ENVIRONMENT_NAME}-${CLUSTER_NAME}/addons ${OPTIONS}
   echo -e "done.\n"
 
   echo "Uploading PKI assets..."
-  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/${CLUSTER_NAME}/pki ${OPTIONS}
+  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/${ENVIRONMENT_NAME}-${CLUSTER_NAME}/pki ${OPTIONS}
   echo -e "done.\n"
 }
 

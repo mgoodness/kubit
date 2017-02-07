@@ -19,18 +19,13 @@ data "template_file" "public_az" {
   template = "${format("%s%s", var.region, element(var.subnets["availability_zones"], count.index))}"
 }
 
-resource "aws_internet_gateway" "gateway" {
-  vpc_id = "${aws_vpc.main.id}"
-  tags { Name = "${var.environment_name}" }
-}
-
 resource "aws_route_table" "public" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = "${var.vpc_id}"
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.gateway.id}"
+    gateway_id = "${var.internet_gateway_id}"
   }
-  tags { Name = "${var.environment_name}-public" }
+  tags { Name = "${var.name}-public" }
 }
 
 resource "aws_route_table_association" "public" {
@@ -44,9 +39,10 @@ resource "aws_subnet" "public" {
   availability_zone = "${element(data.template_file.public_az.*.rendered, count.index)}"
   cidr_block = "${element(var.subnets["public_cidr_blocks"], count.index)}"
   map_public_ip_on_launch = true
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = "${var.vpc_id}"
   tags {
     "kubernetes.io/role/elb" = "true"
-    Name = "${format("%s-public-%s", var.environment_name, element(var.subnets["availability_zones"], count.index))}"
+    KubernetesCluster = "${var.name}"
+    Name = "${format("%s-public-%s", var.name, element(var.subnets["availability_zones"], count.index))}"
   }
 }

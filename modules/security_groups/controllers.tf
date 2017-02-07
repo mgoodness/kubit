@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 resource "aws_security_group" "controllers" {
-  name = "${var.environment_name}-${var.cluster_name}-k8s-controllers"
+  name = "${var.cluster_name}-k8s-controllers"
   vpc_id = "${var.vpc_id}"
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -65,13 +65,13 @@ resource "aws_security_group" "controllers" {
     to_port = 10251
   }
   tags {
-    KubernetesCluster = "${var.environment_name}-${var.cluster_name}"
-    Name = "${var.environment_name}-${var.cluster_name}-k8s-controllers"
+    KubernetesCluster = "${var.cluster_name}"
+    Name = "${var.cluster_name}-k8s-controllers"
   }
 }
 
 resource "aws_security_group" "controllers_elb" {
-  name = "${var.environment_name}-${var.cluster_name}-k8s-controllers-elb"
+  name = "${var.cluster_name}-k8s-controllers-elb"
   vpc_id = "${var.vpc_id}"
   /*HTTPS*/
   egress {
@@ -88,6 +88,6 @@ resource "aws_security_group" "controllers_elb" {
     to_port = 443
   }
   tags {
-    Name = "${var.environment_name}-${var.cluster_name}-k8s-controllers-elb"
+    Name = "${var.cluster_name}-k8s-controllers-elb"
   }
 }

@@ -14,12 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-variable "coreos_channel" { default = "stable" }
-variable "cluster_name" {}
-variable "instance_type" { default = "t2.nano" }
-variable "public_subnet_id" {}
-variable "security_groups" { type = "list" }
-variable "ssh_key_name" {}
+variable "subnets" { type = "map" }
+variable "public_subnet_ids" { type = "list" }
 
 
-output "fqdn" { value = "${aws_instance.bastion.public_dns}" }
+output "gateway_ids" { value = ["${aws_nat_gateway.nat.*.id}"] }

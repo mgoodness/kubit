@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 resource "aws_security_group" "etcd_cluster" {
-  name = "${var.environment_name}-${var.cluster_name}-etcd-cluster"
+  name = "${var.cluster_name}-etcd-cluster"
   vpc_id = "${var.vpc_id}"
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -44,12 +44,12 @@ resource "aws_security_group" "etcd_cluster" {
     to_port = 22
   }
   tags {
-    Name = "${var.environment_name}-${var.cluster_name}-etcd-cluster"
+    Name = "${var.cluster_name}-etcd-cluster"
   }
 }
 
 resource "aws_security_group" "etcd_protocol" {
-  name = "${var.environment_name}-${var.cluster_name}-etcd-protocol"
+  name = "${var.cluster_name}-etcd-protocol"
   vpc_id = "${var.vpc_id}"
   /*etcd*/
   egress {
@@ -66,6 +66,6 @@ resource "aws_security_group" "etcd_protocol" {
     to_port = 2380
   }
   tags {
-    Name = "${var.environment_name}-${var.cluster_name}-etcd-protocol"
+    Name = "${var.cluster_name}-etcd-protocol"
   }
 }

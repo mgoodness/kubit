@@ -35,5 +35,5 @@ resource "aws_instance" "bastion" {
   source_dest_check = false
   subnet_id = "${var.public_subnet_id}"
   vpc_security_group_ids = ["${var.security_groups}"]
-  tags { Name = "${var.environment_name}-${var.cluster_name}-bastion" }
+  tags { Name = "${var.cluster_name}-bastion" }
 }

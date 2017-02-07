@@ -14,12 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-variable "coreos_channel" { default = "stable" }
-variable "cluster_name" {}
-variable "instance_type" { default = "t2.nano" }
-variable "public_subnet_id" {}
-variable "security_groups" { type = "list" }
-variable "ssh_key_name" {}
+resource "aws_eip" "nat" {
+   count = "${length(var.subnets["availability_zones"])}"
+   vpc = true
+}
 
-
-output "fqdn" { value = "${aws_instance.bastion.public_dns}" }
+resource "aws_nat_gateway" "nat" {
+  count = "${length(var.subnets["availability_zones"])}"
+  depends_on = [
+    "aws_eip.nat",
+  ]
+  allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
+  subnet_id = "${element(var.public_subnet_ids, count.index)}"
+}

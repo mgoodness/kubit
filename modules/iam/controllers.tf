@@ -52,17 +52,17 @@ data "aws_iam_policy_document" "controllers_assume_role" {
 }
 
 resource "aws_iam_instance_profile" "controllers" {
-  name = "${var.environment_name}-${var.cluster_name}-controllers"
+  name = "${var.cluster_name}-controllers"
   roles = ["${aws_iam_role.controllers.name}"]
 }
 
 resource "aws_iam_role" "controllers" {
   assume_role_policy = "${data.aws_iam_policy_document.controllers_assume_role.json}"
-  name = "${var.environment_name}-${var.cluster_name}-controllers"
+  name = "${var.cluster_name}-controllers"
 }
 
 resource "aws_iam_role_policy" "controllers" {
-  name = "${var.environment_name}-${var.cluster_name}-controllers"
+  name = "${var.cluster_name}-controllers"
   policy = "${data.aws_iam_policy_document.controllers.json}"
   role = "${aws_iam_role.controllers.id}"
 }

@@ -19,30 +19,15 @@ data "template_file" "private_az" {
   template = "${format("%s%s", var.region, element(var.subnets["availability_zones"], count.index))}"
 }
 
-resource "aws_eip" "nat" {
-   count = "${length(var.subnets["availability_zones"])}"
-   vpc = true
-}
-
-resource "aws_nat_gateway" "nat" {
-  count = "${length(var.subnets["availability_zones"])}"
-  depends_on = [
-    "aws_eip.nat",
-    "aws_internet_gateway.gateway"
-  ]
-  allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
-  subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
-}
-
 resource "aws_route_table" "private" {
   count = "${length(var.subnets["availability_zones"])}"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = "${var.vpc_id}"
   route {
     cidr_block = "0.0.0.0/0"
-    nat_gateway_id = "${element(aws_nat_gateway.nat.*.id, count.index)}"
+    nat_gateway_id = "${element(var.nat_gateway_ids, count.index)}"
   }
   tags {
-    Name = "${format("%s-private-%s", var.environment_name, element(var.subnets["availability_zones"], count.index))}"
+    Name = "${format("%s-private-%s", var.name, element(var.subnets["availability_zones"], count.index))}"
   }
 }
 
@@ -57,9 +42,10 @@ resource "aws_subnet" "private" {
   availability_zone = "${element(data.template_file.private_az.*.rendered, count.index)}"
   cidr_block = "${element(var.subnets["private_cidr_blocks"], count.index)}"
   map_public_ip_on_launch = false
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = "${var.vpc_id}"
   tags {
     "kubernetes.io/role/internal-elb" = "true"
-    Name = "${format("%s-private-%s", var.environment_name, element(var.subnets["availability_zones"], count.index))}"
+    KubernetesCluster = "${var.name}"
+    Name = "${format("%s-private-%s", var.name, element(var.subnets["availability_zones"], count.index))}"
   }
 }

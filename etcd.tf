@@ -25,7 +25,7 @@ module "etcd_node_01" {
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
   kms_key_id = "${var.kms_key_id}"
-  private_subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  private_subnet_id = "${element(module.subnet_private.subnet_ids, 0)}"
   region = "${var.aws_region}"
   security_groups = [
     "${module.security_groups.etcd_cluster}",
@@ -46,7 +46,7 @@ module "etcd_node_02" {
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
   kms_key_id = "${var.kms_key_id}"
-  private_subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  private_subnet_id = "${element(module.subnet_private.subnet_ids, 1)}"
   region = "${var.aws_region}"
   security_groups = [
     "${module.security_groups.etcd_cluster}",
@@ -67,7 +67,7 @@ module "etcd_node_03" {
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
   kms_key_id = "${var.kms_key_id}"
-  private_subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  private_subnet_id = "${element(module.subnet_private.subnet_ids, 2)}"
   region = "${var.aws_region}"
   security_groups = [
     "${module.security_groups.etcd_cluster}",

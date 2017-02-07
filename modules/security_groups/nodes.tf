@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 resource "aws_security_group" "nodes" {
-  name = "${var.environment_name}-${var.cluster_name}-k8s-nodes"
+  name = "${var.cluster_name}-k8s-nodes"
   vpc_id = "${var.vpc_id}"
   /*Flannel*/
   ingress {
@@ -46,6 +46,6 @@ resource "aws_security_group" "nodes" {
     to_port = 10255
   }
   tags {
-    Name = "${var.environment_name}-${var.cluster_name}-k8s-nodes"
+    Name = "${var.cluster_name}-k8s-nodes"
   }
 }
