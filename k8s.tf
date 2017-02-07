@@ -94,6 +94,6 @@ module "workers_t2_large_2" {
     "${module.security_groups.workers}"
   ]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
-  subnet_id = "${element(module.subnet_private.subnet_ids, 0)}"
+  subnet_id = "${element(module.subnet_private.subnet_ids, 2)}"
   tls_token = "${module.controllers.tls_token}"
 }

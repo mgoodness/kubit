@@ -29,7 +29,7 @@ shopt -s nocasematch
 
 function create_kubeconfig() {
   echo -e "Creating kubeconfig entry..."
-  kubectl config set-cluster ${ENVIRONMENT_NAME}-${CLUSTER_NAME} --server=https://"kubernetes.${CLUSTER_NAME}.${EXTERNAL_DOMAIN}" \
+  kubectl config set-cluster ${ENVIRONMENT_NAME}-${CLUSTER_NAME} --server=https://"kubernetes.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${EXTERNAL_DOMAIN}" \
     --certificate-authority=pki/ca.pem --embed-certs=true
 
   kubectl config set-credentials ${ENVIRONMENT_NAME}-${CLUSTER_NAME}-admin --client-certificate=pki/admin.pem \
@@ -91,7 +91,7 @@ EOF
   "CN": "kubit etcd peer",
   "hosts": [
     "${AWS_WILDCARD}",
-    "*.${CLUSTER_NAME}.${INTERNAL_DOMAIN}"
+    "*.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${INTERNAL_DOMAIN}"
   ],
   "key": ${pki_key_type},
   "names": ${names}
@@ -113,8 +113,8 @@ EOF
     "kubernetes.default",
     "kubernetes.default.svc",
     "kubernetes.default.svc.cluster.local",
-    "kubernetes.${CLUSTER_NAME}.${EXTERNAL_DOMAIN}",
-    "kubernetes.${CLUSTER_NAME}.${INTERNAL_DOMAIN}",
+    "kubernetes.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${EXTERNAL_DOMAIN}",
+    "kubernetes.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${INTERNAL_DOMAIN}",
     "${APISERVER_SERVICE_IP}"
   ],
   "key": ${pki_key_type},
