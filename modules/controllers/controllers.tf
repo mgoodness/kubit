@@ -32,7 +32,7 @@ data "template_file" "controllers_config" {
   vars {
     APISERVER_COUNT = "${var.controller_count}"
     ASSETS_BUCKET_NAME = "${var.assets_bucket_name}"
-    CLUSTER_NAME = "${var.environment_name}-${var.cluster["name"]}"
+    CLUSTER_NAME = "${var.cluster["name"]}"
     DNS_SERVICE_IP = "${cidrhost(var.cluster["services_cidr_block"], 10)}"
     HYPERKUBE_REPO = "${var.hyperkube["repository"]}"
     HYPERKUBE_VERSION = "${var.hyperkube["version"]}"
@@ -51,25 +51,25 @@ resource "aws_autoscaling_group" "controllers" {
   load_balancers = ["${aws_elb.controllers.name}"]
   max_size = "${var.max_nodes}"
   min_size = "${var.min_nodes}"
-  name = "${var.environment_name}-${var.cluster["name"]}-controllers"
+  name = "${var.cluster["name"]}-controllers"
   vpc_zone_identifier = ["${var.private_subnet_ids}"]
   wait_for_elb_capacity = 1
   tag {
     key = "KubernetesCluster"
     propagate_at_launch = true
-    value = "${var.environment_name}-${var.cluster["name"]}"
+    value = "${var.cluster["name"]}"
   }
   tag {
     key = "Name"
     propagate_at_launch = true
-    value = "${var.environment_name}-${var.cluster["name"]}-controller"
+    value = "${var.cluster["name"]}-controller"
   }
 }
 
 resource "aws_elb" "controllers" {
   connection_draining = true
   idle_timeout = "${var.elb_idle_timeout}"
-  name = "${var.environment_name}-${var.cluster["name"]}-controllers"
+  name = "${var.cluster["name"]}-controllers"
   security_groups = ["${var.elb_security_groups}"]
   subnets = ["${var.public_subnet_ids}"]
   health_check {
@@ -85,7 +85,7 @@ resource "aws_elb" "controllers" {
     lb_port = 443
     lb_protocol = "tcp"
   }
-  tags { Name = "${var.environment_name}-${var.cluster["name"]}-controllers" }
+  tags { Name = "${var.cluster["name"]}-controllers" }
 }
 
 resource "aws_launch_configuration" "controllers" {
@@ -93,7 +93,7 @@ resource "aws_launch_configuration" "controllers" {
   image_id = "${data.aws_ami.coreos.id}"
   instance_type = "${var.instance_type}"
   key_name = "${var.ssh_key_name}"
-  name_prefix = "${var.environment_name}-${var.cluster["name"]}-controllers-"
+  name_prefix = "${var.cluster["name"]}-controllers-"
   security_groups = ["${var.instance_security_groups}"]
   user_data = "${data.template_file.controllers_config.rendered}"
   lifecycle { create_before_destroy = true }

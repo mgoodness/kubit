@@ -21,7 +21,6 @@ APISERVER_SERVICE_IP="10.252.0.1"
 AWS_REGION="us-east-1"
 AWS_WILDCARD="*.ec2.internal"
 CLUSTER_NAME="kubit"
-ENVIRONMENT_NAME="test"
 HYPERKUBE_VERSION="v1.5.2_coreos.1"
 INTERNAL_DOMAIN="kubit.local"
 
@@ -29,14 +28,14 @@ shopt -s nocasematch
 
 function create_kubeconfig() {
   echo -e "Creating kubeconfig entry..."
-  kubectl config set-cluster ${ENVIRONMENT_NAME}-${CLUSTER_NAME} --server=https://"kubernetes.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${EXTERNAL_DOMAIN}" \
+  kubectl config set-cluster ${CLUSTER_NAME}.${EXTERNAL_DOMAIN} --server=https://"kubernetes.${CLUSTER_NAME}.${EXTERNAL_DOMAIN}" \
     --certificate-authority=pki/ca.pem --embed-certs=true
 
-  kubectl config set-credentials ${ENVIRONMENT_NAME}-${CLUSTER_NAME}-admin --client-certificate=pki/admin.pem \
+  kubectl config set-credentials ${CLUSTER_NAME}.${EXTERNAL_DOMAIN}-admin --client-certificate=pki/admin.pem \
     --client-key=pki/admin-key.pem --embed-certs=true
 
-  kubectl config set-context ${ENVIRONMENT_NAME}-${CLUSTER_NAME} --cluster=${ENVIRONMENT_NAME}-${CLUSTER_NAME} \
-    --user=${ENVIRONMENT_NAME}-${CLUSTER_NAME}-admin
+  kubectl config set-context ${CLUSTER_NAME}.${EXTERNAL_DOMAIN} --cluster=${CLUSTER_NAME}.${EXTERNAL_DOMAIN} \
+    --user=${CLUSTER_NAME}.${EXTERNAL_DOMAIN}-admin
   echo -e "done.\n"
 }
 
@@ -91,7 +90,7 @@ EOF
   "CN": "kubit etcd peer",
   "hosts": [
     "${AWS_WILDCARD}",
-    "*.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${INTERNAL_DOMAIN}"
+    "*.${CLUSTER_NAME}.${INTERNAL_DOMAIN}"
   ],
   "key": ${pki_key_type},
   "names": ${names}
@@ -113,8 +112,8 @@ EOF
     "kubernetes.default",
     "kubernetes.default.svc",
     "kubernetes.default.svc.cluster.local",
-    "kubernetes.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${EXTERNAL_DOMAIN}",
-    "kubernetes.${ENVIRONMENT_NAME}-${CLUSTER_NAME}.${INTERNAL_DOMAIN}",
+    "kubernetes.${CLUSTER_NAME}.${EXTERNAL_DOMAIN}",
+    "kubernetes.${CLUSTER_NAME}.${INTERNAL_DOMAIN}",
     "${APISERVER_SERVICE_IP}"
   ],
   "key": ${pki_key_type},
@@ -168,11 +167,6 @@ function create_tfvars() {
   [[ "${AWS_REGION}" != "us-east-1" ]] && AWS_WILDCARD="*.${aws_region}.compute.internal"
   echo
 
-  echo -n "Enter environment name [${ENVIRONMENT_NAME}]: "
-  read environment_name
-  [[ "${environment_name}" != "" ]] && ENVIRONMENT_NAME="${environment_name}"
-  echo
-
   echo -n "Enter cluster name [${CLUSTER_NAME}]: "
   read cluster_name
   [[ "${cluster_name}" != "" ]] && CLUSTER_NAME="${cluster_name}"
@@ -198,7 +192,6 @@ assets_bucket_name = "${ASSETS_BUCKET_NAME}"
 aws_region = "${AWS_REGION}"
 cluster = { name = "${CLUSTER_NAME}" }
 domain_names = { external = "${EXTERNAL_DOMAIN}", internal = "${INTERNAL_DOMAIN}" }
-environment_name = "${ENVIRONMENT_NAME}"
 hyperkube = { version = "${HYPERKUBE_VERSION}" }
 kms_key_id = "${KMS_KEY_ID}"
 EOF
@@ -213,11 +206,11 @@ function upload_assets() {
   echo -e "done.\n"
 
   echo "Uploading addon manifests..."
-  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/${ENVIRONMENT_NAME}-${CLUSTER_NAME}/addons ${OPTIONS}
+  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/${CLUSTER_NAME}/addons ${OPTIONS}
   echo -e "done.\n"
 
   echo "Uploading PKI assets..."
-  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/${ENVIRONMENT_NAME}-${CLUSTER_NAME}/pki ${OPTIONS}
+  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/${CLUSTER_NAME}/pki ${OPTIONS}
   echo -e "done.\n"
 }
 

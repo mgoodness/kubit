@@ -28,14 +28,14 @@ data "aws_ami" "coreos" {
 }
 
 data "template_file" "pool_name" {
-  template = "${var.environment_name}-${var.cluster["name"]}-workers-${replace(var.instance_type, ".", "-")}-${var.availability_zone}"
+  template = "${var.cluster["name"]}-workers-${replace(var.instance_type, ".", "-")}-${var.availability_zone}"
 }
 
 data "template_file" "pool_config" {
   template = "${file("${path.module}/worker_pool.yaml")}"
   vars {
     ASSETS_BUCKET_NAME = "${var.assets_bucket_name}"
-    CLUSTER_NAME = "${var.environment_name}-${var.cluster["name"]}"
+    CLUSTER_NAME = "${var.cluster["name"]}"
     CONTROLLER_ENDPOINT = "${var.controller_endpoint}"
     DNS_SERVICE_IP = "${cidrhost(var.cluster["services_cidr_block"], 10)}"
     HYPERKUBE_REPO = "${var.hyperkube["repository"]}"
@@ -56,7 +56,7 @@ resource "aws_autoscaling_group" "pool" {
   tag {
     key = "KubernetesCluster"
     propagate_at_launch = true
-    value = "${var.environment_name}-${var.cluster["name"]}"
+    value = "${var.cluster["name"]}"
   }
   tag {
     key = "Name"

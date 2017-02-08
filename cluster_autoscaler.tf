@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "cluster_autoscaler" {
 
 module "cluster_autoscaler" {
   source = "./modules/app_role"
-  app_name = "${var.environment_name}-${var.cluster["name"]}-autoscaler"
+  app_name = "${var.cluster["name"]}-autoscaler"
   node_role_arns = ["${module.iam.workers_role_arn}"]
   role_policy_document = "${data.aws_iam_policy_document.cluster_autoscaler.json}"
 }
