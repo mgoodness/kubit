@@ -76,5 +76,5 @@ module "subnet_private" {
 
 resource "aws_key_pair" "key_pair" {
   key_name = "${var.cluster["name"]}"
-  public_key = "${file(format("keys/%s.pub", var.cluster["name"]))}"
+  public_key = "${file(format("${path.module}/keys/%s.pub", var.cluster["name"]))}"
 }
