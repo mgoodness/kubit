@@ -15,6 +15,7 @@
 
 ASSETS_BUCKET_NAME=
 EXTERNAL_DOMAIN=
+KMS_KEY_ID=
 
 APISERVER_SERVICE_IP="10.252.0.1"
 AWS_REGION="us-east-1"
@@ -181,26 +182,35 @@ function create_tfvars() {
   [[ "${hyperkube_version}" != "" ]] && HYPERKUBE_VERSION="${hyperkube_version}"
   echo
 
+  echo -n "Enter kms key id (arn) [blank = aws master key]: "
+  read kms_key_id
+  [[ "${kms_key_id}" != "" ]] && KMS_KEY_ID="${kms_key_id}"
+  echo
+
   cat << EOF > terraform.tfvars
 assets_bucket_name = "${ASSETS_BUCKET_NAME}"
 aws_region = "${AWS_REGION}"
 cluster = { name = "${CLUSTER_NAME}" }
 domain_names = { external = "${EXTERNAL_DOMAIN}", internal = "${INTERNAL_DOMAIN}" }
 hyperkube = { version = "${HYPERKUBE_VERSION}" }
+kms_key_id = "${KMS_KEY_ID}"
 EOF
 }
 
 function upload_assets() {
+  OPTIONS="--sse=AES256"
+  [[ ${KMS_KEY_ID} != "" ]] && OPTIONS="--sse=aws:kms --sse-kms-key-id=${KMS_KEY_ID}"
+
   echo "Creating assets bucket..."
   aws s3 mb s3://${ASSETS_BUCKET_NAME}
   echo -e "done.\n"
 
   echo "Uploading addon manifests..."
-  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/addons
+  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/addons ${OPTIONS}
   echo -e "done.\n"
 
   echo "Uploading PKI assets..."
-  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/pki
+  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/pki ${OPTIONS}
   echo -e "done.\n"
 }
 
