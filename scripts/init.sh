@@ -182,7 +182,7 @@ function create_tfvars() {
   [[ "${hyperkube_version}" != "" ]] && HYPERKUBE_VERSION="${hyperkube_version}"
   echo
 
-  echo -n "Enter kms key id (arn) [blank = aws master key]: "
+  echo -n "Enter KMS key ID (ARN) [blank = AWS master key]: "
   read kms_key_id
   [[ "${kms_key_id}" != "" ]] && KMS_KEY_ID="${kms_key_id}"
   echo
