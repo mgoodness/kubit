@@ -32,8 +32,8 @@ data "template_file" "etcd" {
   vars {
     ASSETS_BUCKET_NAME = "${var.assets_bucket_name}"
     CLUSTER_NAME = "${var.cluster_name}"
-    DOMAIN = "${var.internal_domain_name}"
-    FQDN = "${var.cluster_name}-etcd-${var.unique_id}.${var.internal_domain_name}"
+    FQDN = "etcd-${var.unique_id}.${var.cluster_name}.${var.internal_domain_name}"
+    INTERNAL_DOMAIN = "${var.internal_domain_name}"
     NODE_NAME = "${var.cluster_name}-etcd-${var.unique_id}"
     UPDATE_GROUP = "${var.coreos_channel}"
   }
@@ -76,7 +76,7 @@ resource "aws_instance" "etcd" {
 }
 
 resource "aws_route53_record" "etcd" {
-  name = "${var.cluster_name}-etcd-${var.unique_id}.${var.internal_domain_name}"
+  name = "etcd-${var.unique_id}.${var.cluster_name}.${var.internal_domain_name}"
   ttl = 30
   type = "A"
   records = ["${aws_instance.etcd.private_ip}"]

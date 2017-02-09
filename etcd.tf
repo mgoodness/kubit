@@ -24,7 +24,7 @@ module "etcd_node_01" {
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
   kms_key_id = "${var.kms_key_id}"
-  private_subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  private_subnet_id = "${element(module.subnet_private.subnet_ids, 0)}"
   region = "${var.aws_region}"
   security_groups = [
     "${module.security_groups.etcd_cluster}",
@@ -37,14 +37,14 @@ module "etcd_node_01" {
 module "etcd_node_02" {
   source = "./modules/etcd_node"
   assets_bucket_name = "${var.assets_bucket_name}"
-  availability_zone = "${element(var.subnets["availability_zones"], 0)}"
+  availability_zone = "${element(var.subnets["availability_zones"], 1)}"
   cluster_name = "${var.cluster["name"]}"
   ebs_encrypted = "${var.ebs_encrypted}"
   instance_profile = "${module.iam.etcd_instance_profile}"
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
   kms_key_id = "${var.kms_key_id}"
-  private_subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  private_subnet_id = "${element(module.subnet_private.subnet_ids, 1)}"
   region = "${var.aws_region}"
   security_groups = [
     "${module.security_groups.etcd_cluster}",
@@ -57,14 +57,14 @@ module "etcd_node_02" {
 module "etcd_node_03" {
   source = "./modules/etcd_node"
   assets_bucket_name = "${var.assets_bucket_name}"
-  availability_zone = "${element(var.subnets["availability_zones"], 0)}"
+  availability_zone = "${element(var.subnets["availability_zones"], 2)}"
   cluster_name = "${var.cluster["name"]}"
   ebs_encrypted = "${var.ebs_encrypted}"
   instance_profile = "${module.iam.etcd_instance_profile}"
   internal_domain_name = "${var.domain_names["internal"]}"
   internal_domain_zone_id = "${module.common_dns.domain_zone_ids["internal"]}"
   kms_key_id = "${var.kms_key_id}"
-  private_subnet_id = "${element(module.vpc.private_subnet_ids, 0)}"
+  private_subnet_id = "${element(module.subnet_private.subnet_ids, 2)}"
   region = "${var.aws_region}"
   security_groups = [
     "${module.security_groups.etcd_cluster}",
@@ -76,6 +76,7 @@ module "etcd_node_03" {
 
 module "etcd_dns" {
   source = "./modules/etcd_dns"
+  cluster_name = "${var.cluster["name"]}"
   etcd_node_fqdns = [
     "${module.etcd_node_01.fqdn}",
     "${module.etcd_node_02.fqdn}",

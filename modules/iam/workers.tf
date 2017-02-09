@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "workers" {
   }
   statement {
     actions = ["s3:GetObject"]
-    resources = ["arn:aws:s3:::${var.assets_bucket_name}/*"]
+    resources = ["arn:aws:s3:::${var.assets_bucket_name}/${var.cluster_name}/*"]
   }
 }
 

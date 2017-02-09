@@ -19,7 +19,7 @@ provider "aws" { region = "${var.aws_region}" }
 module "bastion" {
   source = "./modules/bastion"
   cluster_name = "${var.cluster["name"]}"
-  public_subnet_id = "${element(module.vpc.public_subnet_ids, 0)}"
+  public_subnet_id = "${element(module.subnet_public.subnet_ids, 0)}"
   security_groups = ["${module.security_groups.bastion}"]
   ssh_key_name = "${aws_key_pair.key_pair.key_name}"
 }
@@ -46,12 +46,35 @@ module "security_groups" {
 module "vpc" {
   source = "./modules/vpc"
   cidr_block = "${var.vpc_cidr_block}"
-  cluster_name = "${var.cluster["name"]}"
+  name = "${var.cluster["name"]}"
   region = "${var.aws_region}"
-  subnets = ["${var.subnets}"]
+}
+
+module "subnet_public" {
+  source = "./modules/subnet_public"
+  internet_gateway_id = "${module.vpc.internet_gateway_id}"
+  name = "${var.cluster["name"]}"
+  region = "${var.aws_region}"
+  subnets = "${var.subnets}"
+  vpc_id = "${module.vpc.vpc_id}"
+}
+
+module "nat_gateway" {
+  source = "./modules/nat_gateway"
+  public_subnet_ids = ["${module.subnet_public.subnet_ids}"]
+  subnets = "${var.subnets}"
+}
+
+module "subnet_private" {
+  source = "./modules/subnet_private"
+  nat_gateway_ids = "${module.nat_gateway.gateway_ids}"
+  name = "${var.cluster["name"]}"
+  region = "${var.aws_region}"
+  subnets = "${var.subnets}"
+  vpc_id = "${module.vpc.vpc_id}"
 }
 
 resource "aws_key_pair" "key_pair" {
   key_name = "${var.cluster["name"]}"
-  public_key = "${file(format("keys/%s.pub", var.cluster["name"]))}"
+  public_key = "${file(format("${path.module}/keys/%s.pub", var.cluster["name"]))}"
 }

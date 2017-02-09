@@ -35,6 +35,7 @@ data "template_file" "pool_config" {
   template = "${file("${path.module}/worker_pool.yaml")}"
   vars {
     ASSETS_BUCKET_NAME = "${var.assets_bucket_name}"
+    CLUSTER_NAME = "${var.cluster["name"]}"
     CONTROLLER_ENDPOINT = "${var.controller_endpoint}"
     DNS_SERVICE_IP = "${cidrhost(var.cluster["services_cidr_block"], 10)}"
     HYPERKUBE_REPO = "${var.hyperkube["repository"]}"

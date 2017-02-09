@@ -7,7 +7,7 @@ coreos:
     cert_file: /etc/etcd2/ssl/etcd.pem
     client_cert_auth: true
     data_dir: /var/lib/etcd2
-    discovery_srv: ${DOMAIN}
+    discovery_srv: ${CLUSTER_NAME}.${INTERNAL_DOMAIN}
     initial_advertise_peer_urls: https://${FQDN}:2380
     initial_cluster_state: new
     initial_cluster_token: ${CLUSTER_NAME}
@@ -106,6 +106,6 @@ write_files:
 
       mkdir -p /etc/etcd2/ssl
       for asset in "$${SSL_ASSETS[@]}"; do
-        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/pki/$${asset} /etc/etcd2/ssl/$${asset}
+        /opt/bin/gof3r cp s3://${ASSETS_BUCKET_NAME}/${CLUSTER_NAME}/pki/$${asset} /etc/etcd2/ssl/$${asset}
       done
     permissions: 0700

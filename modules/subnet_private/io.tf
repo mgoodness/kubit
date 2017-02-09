@@ -14,18 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-resource "aws_route53_record" "etcd_clients" {
-  name = "_etcd-client-ssl._tcp.${var.cluster_name}.${var.internal_domain_name}"
-  ttl = 30
-  type = "SRV"
-  records = ["${formatlist("0 0 2379 %s", var.etcd_node_fqdns)}"]
-  zone_id = "${var.internal_domain_zone_id}"
-}
+variable "name" {}
+variable "nat_gateway_ids" { type = "list" }
+variable "subnets" { type = "map" }
+variable "region" {}
+variable "vpc_id" {}
 
-resource "aws_route53_record" "etcd_servers" {
-  name = "_etcd-server-ssl._tcp.${var.cluster_name}.${var.internal_domain_name}"
-  ttl = 30
-  type = "SRV"
-  records = ["${formatlist("0 0 2380 %s", var.etcd_node_fqdns)}"]
-  zone_id = "${var.internal_domain_zone_id}"
-}
+
+output "route_table_id" { value = "${aws_route_table.private.id}" }
+output "subnet_ids" { value = ["${aws_subnet.private.*.id}"] }

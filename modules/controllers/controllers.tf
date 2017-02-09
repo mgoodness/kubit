@@ -32,6 +32,7 @@ data "template_file" "controllers_config" {
   vars {
     APISERVER_COUNT = "${var.controller_count}"
     ASSETS_BUCKET_NAME = "${var.assets_bucket_name}"
+    CLUSTER_NAME = "${var.cluster["name"]}"
     DNS_SERVICE_IP = "${cidrhost(var.cluster["services_cidr_block"], 10)}"
     HYPERKUBE_REPO = "${var.hyperkube["repository"]}"
     HYPERKUBE_VERSION = "${var.hyperkube["version"]}"

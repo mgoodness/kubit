@@ -28,14 +28,14 @@ shopt -s nocasematch
 
 function create_kubeconfig() {
   echo -e "Creating kubeconfig entry..."
-  kubectl config set-cluster ${CLUSTER_NAME} --server=https://"kubernetes.${EXTERNAL_DOMAIN}" \
+  kubectl config set-cluster ${CLUSTER_NAME}.${EXTERNAL_DOMAIN} --server=https://"kubernetes.${CLUSTER_NAME}.${EXTERNAL_DOMAIN}" \
     --certificate-authority=pki/ca.pem --embed-certs=true
 
-  kubectl config set-credentials ${CLUSTER_NAME}-admin --client-certificate=pki/admin.pem \
+  kubectl config set-credentials ${CLUSTER_NAME}.${EXTERNAL_DOMAIN}-admin --client-certificate=pki/admin.pem \
     --client-key=pki/admin-key.pem --embed-certs=true
 
-  kubectl config set-context ${CLUSTER_NAME} --cluster=${CLUSTER_NAME} \
-    --user=${CLUSTER_NAME}-admin
+  kubectl config set-context ${CLUSTER_NAME}.${EXTERNAL_DOMAIN} --cluster=${CLUSTER_NAME}.${EXTERNAL_DOMAIN} \
+    --user=${CLUSTER_NAME}.${EXTERNAL_DOMAIN}-admin
   echo -e "done.\n"
 }
 
@@ -90,7 +90,7 @@ EOF
   "CN": "kubit etcd peer",
   "hosts": [
     "${AWS_WILDCARD}",
-    "*.${INTERNAL_DOMAIN}"
+    "*.${CLUSTER_NAME}.${INTERNAL_DOMAIN}"
   ],
   "key": ${pki_key_type},
   "names": ${names}
@@ -112,8 +112,8 @@ EOF
     "kubernetes.default",
     "kubernetes.default.svc",
     "kubernetes.default.svc.cluster.local",
-    "kubernetes.${EXTERNAL_DOMAIN}",
-    "kubernetes.${INTERNAL_DOMAIN}",
+    "kubernetes.${CLUSTER_NAME}.${EXTERNAL_DOMAIN}",
+    "kubernetes.${CLUSTER_NAME}.${INTERNAL_DOMAIN}",
     "${APISERVER_SERVICE_IP}"
   ],
   "key": ${pki_key_type},
@@ -206,11 +206,11 @@ function upload_assets() {
   echo -e "done.\n"
 
   echo "Uploading addon manifests..."
-  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/addons ${OPTIONS}
+  aws s3 sync addons s3://${ASSETS_BUCKET_NAME}/${CLUSTER_NAME}/addons ${OPTIONS}
   echo -e "done.\n"
 
   echo "Uploading PKI assets..."
-  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/pki ${OPTIONS}
+  aws s3 sync pki s3://${ASSETS_BUCKET_NAME}/${CLUSTER_NAME}/pki ${OPTIONS}
   echo -e "done.\n"
 }
 
