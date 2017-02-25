@@ -83,9 +83,9 @@ EOF
   fi
 
   if [[ ! -f pki/etcd-key.pem ]] || [[ ! -f pki/etcd.pem ]]; then
-    echo "Creating etcd keys & certificates..."
-    cfssl gencert -ca pki/ca.pem -ca-key pki/ca-key.pem -config=pki/config.json \
-      -profile=node - <<EOF | cfssljson -bare pki/etcd
+    echo "Creating etcd keys & certificate..."
+    cfssl gencert -ca pki/ca.pem -ca-key pki/ca-key.pem -config pki/config.json \
+      -profile node - <<EOF | cfssljson -bare pki/etcd
 {
   "CN": "kubit etcd peer",
   "hosts": [
@@ -103,8 +103,8 @@ EOF
 
   if [[ ! -f pki/apiserver-key.pem ]] || [[ ! -f pki/apiserver.pem ]]; then
     echo "Creating API server key & certificate..."
-    cfssl gencert -ca pki/ca.pem -ca-key pki/ca-key.pem -config=pki/config.json \
-      -profile=node - <<EOF | cfssljson -bare pki/apiserver
+    cfssl gencert -ca pki/ca.pem -ca-key pki/ca-key.pem -config pki/config.json \
+      -profile node - <<EOF | cfssljson -bare pki/apiserver
 {
   "CN": "kubit API server",
   "hosts": [
@@ -127,8 +127,8 @@ EOF
 
   if [[ ! -f pki/admin-key.pem ]] || [[ ! -f pki/admin.pem ]]; then
     echo "Creating admin key & certificate..."
-    cfssl gencert -ca pki/ca.pem -ca-key pki/ca-key.pem -config=pki/config.json \
-      -profile=admin - <<EOF | cfssljson -bare pki/admin
+    cfssl gencert -ca pki/ca.pem -ca-key pki/ca-key.pem -config pki/config.json \
+      -profile admin - <<EOF | cfssljson -bare pki/admin
 {
   "CN": "kubit admin",
   "key": ${pki_key_type},

@@ -42,15 +42,16 @@ Name | Type | Description | Handled by `init.sh` | Default
  - Avoid changing any `init.sh`-handled variables except through that script. Altering them manually will invalidate any generated TLS assets.
  - Avoid changing `cluster.services_cidr_block` unless absolutely necessary. Doing so also requires changes to `scripts/init.sh` and `addons/kube-dns-svc.yaml`.
 
+## PKI Renewal
+`scripts/renew-pki.sh` will renew the API server, etcd, and admin TLS certificates using the existing keys & CSRs. It will then update `kubeconfig` and upload the new certificates to the assets bucket. **Be sure to renew and replace certificates before the old ones expire!**
 
 ## TODO
-- [x] Write variable values to `terraform.tfvars` from `init.sh` script
-- [ ] Create `refresh-pki.sh` script
+- [x] Create `refresh-pki.sh` script
 - Improve documentation
  - [ ] process
  - [ ] caveats
  - [ ] modules
  - [ ] ...
 - etcd v3 migration path
- - [ ] create
+ - [x] create
  - [ ] document
