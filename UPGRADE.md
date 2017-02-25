@@ -41,17 +41,17 @@
     sudo mkdir -p /etc/systemd/system/etcd-member.service.d && \
     sudo tee /etc/systemd/system/etcd-member.service.d/99-upgrade.conf > /dev/null <<EOF
     [Service]
-    Environment="ETCD_CERT_FILE=/etc/etcd2/ssl/etcd.pem"
+    Environment="ETCD_CERT_FILE=/etc/ssl/certs/etcd.pem"
     Environment="ETCD_CLIENT_CERT_AUTH=true"
-    Environment="ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem"
+    Environment="ETCD_KEY_FILE=/etc/ssl/certs/etcd-key.pem"
     Environment="ETCD_LISTEN_CLIENT_URLS=https://0.0.0.0:2379"
     Environment="ETCD_LISTEN_PEER_URLS=https://0.0.0.0:2380"
-    Environment="ETCD_PEER_CERT_FILE=/etc/etcd2/ssl/etcd.pem"
+    Environment="ETCD_PEER_CERT_FILE=/etc/ssl/certs/etcd.pem"
     Environment="ETCD_PEER_CLIENT_CERT_AUTH=true"
-    Environment="ETCD_PEER_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem"
-    Environment="ETCD_PEER_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem"
+    Environment="ETCD_PEER_KEY_FILE=/etc/ssl/certs/etcd-key.pem"
+    Environment="ETCD_PEER_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem"
     Environment="ETCD_SSL_DIR=/etc/etcd2/ssl"
-    Environment="ETCD_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem"
+    Environment="ETCD_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem"
     EOF
 
     grep ETCD_ADVERTISE_CLIENT_URLS /var/run/systemd/system/etcd2.service.d/20-cloudinit.conf | \
