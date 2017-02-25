@@ -28,7 +28,7 @@ variable "ebs_encrypted" { default = true }
 variable "hyperkube" {
   default = {
     repository = "quay.io/coreos/hyperkube"
-    version = "v1.5.2_coreos.1"
+    version = "v1.5.3_coreos.0"
   }
 }
 variable "kms_key_id" { default = "" }
