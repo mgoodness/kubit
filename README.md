@@ -42,17 +42,14 @@ Name | Type | Description | Handled by `init.sh` | Default
  - Avoid changing any `init.sh`-handled variables except through that script. Altering them manually will invalidate any generated TLS assets.
  - Avoid changing `cluster.services_cidr_block` unless absolutely necessary. Doing so also requires changes to `scripts/init.sh` and `addons/kube-dns-svc.yaml`.
 
-#### Encryption
-If you have specified an account specific `kms_key_id` (ARN) perform the following steps *before deploying the cluster*.
-
+## Encryption
+If you specify an account-specific `kms_key_id` ARN, perform the following steps *before deploying the cluster*.
  - Create cluster IAM Roles:
-
    ```
    terraform apply --target=module.iam
    ```
 
  - Grant generated cluster IAM Roles `Key Users` access to the specified KMS key:
-
    ```
    <cluster.name>-controllers
    <cluster.name>-etcd
