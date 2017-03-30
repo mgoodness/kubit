@@ -148,7 +148,7 @@ coreos:
           --container-runtime=docker \
           --enable-custom-metrics \
           --network-plugin=cni \
-          --node-labels=kubernetes.io/role=master \
+          --node-labels=kubernetes.io/role=master,node-role.kubernetes.io/master=true \
           --pod-manifest-path=/etc/kubernetes/manifests \
           --register-schedulable=false \
           --rkt-path=/usr/bin/rkt
