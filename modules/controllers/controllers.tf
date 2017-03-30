@@ -14,19 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-data "aws_ami" "coreos" {
-  most_recent = true
-  owners = [595879546273]
-  filter {
-    name = "name"
-    values = ["CoreOS-${var.coreos_channel}-*-hvm"]
-  }
-  filter {
-    name = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 data "template_file" "controllers_config" {
   template = "${file("${path.module}/controllers.yaml")}"
   vars {
@@ -89,7 +76,7 @@ resource "aws_elb" "controllers" {
 
 resource "aws_launch_configuration" "controllers" {
   iam_instance_profile = "${var.instance_profile}"
-  image_id = "${data.aws_ami.coreos.id}"
+  image_id = "${var.ami_id}"
   instance_type = "${var.instance_type}"
   key_name = "${var.ssh_key_name}"
   name_prefix = "${var.cluster["name"]}-controllers-"

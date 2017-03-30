@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+variable "ami_id" {}
 variable "assets_bucket_name" {}
 variable "cluster" { type = "map" }
 variable "controller_count" { default = 2 }

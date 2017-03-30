@@ -14,19 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-data "aws_ami" "coreos" {
-  most_recent = true
-  owners = [595879546273]
-  filter {
-    name = "name"
-    values = ["CoreOS-${var.coreos_channel}-*-hvm"]
-  }
-  filter {
-    name = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 data "template_file" "etcd" {
   template = "${file("${path.module}/etcd_v${var.version}.yaml")}"
   vars {
@@ -63,7 +50,7 @@ resource "aws_ebs_volume" "etcd" {
 }
 
 resource "aws_instance" "etcd" {
-  ami = "${data.aws_ami.coreos.id}"
+  ami = "${var.ami_id}"
   iam_instance_profile = "${var.instance_profile}"
   instance_type = "${var.instance_type}"
   key_name = "${var.ssh_key_name}"

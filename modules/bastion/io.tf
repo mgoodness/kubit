@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+variable "ami_id" {}
 variable "cluster_name" {}
 variable "coreos_channel" { default = "stable" }
 variable "instance_type" { default = "t2.nano" }
