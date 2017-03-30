@@ -106,7 +106,7 @@ coreos:
           --kubeconfig=/etc/kubernetes/kubeconfig.yaml \
           --network-plugin=cni \
           --network-plugin-dir=/etc/kubernetes/cni/net.d \
-      --node-labels=kubernetes.io/role=node,node-role.kubernetes.io/node=true \
+          --node-labels=kubernetes.io/role=node,node-role.kubernetes.io/node=true \
           --pod-manifest-path=/etc/kubernetes/manifests \
           --require-kubeconfig \
           --rkt-path=/usr/bin/rkt \
